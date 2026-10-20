@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Kiểm tra iPhone 17 Pro Max</title>
+<style>
+:root{
+  --bg:#F2F3F5; --card:#FFFFFF; --ink:#17191E; --muted:#5D6472; --line:#E2E5EA;
+  --accent:#E8691C; --accent-ink:#FFFFFF; --accent-soft:#FCEBDD;
+  --pass:#1D7F45; --pass-bg:#E3F3E9; --fail:#BF2E28; --fail-bg:#FBE7E5;
+  --warn:#8A5A07; --warn-bg:#FBF0D9; --chip:#ECEEF2;
+  --radius-lg:14px; --radius-sm:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#16181C; --card:#202329; --ink:#EEF0F3; --muted:#A3AAB6; --line:#30343C;
+    --accent:#F07A2E; --accent-soft:#3A2516;
+    --pass:#4CC07A; --pass-bg:#16301F; --fail:#F0675F; --fail-bg:#3A1A18;
+    --warn:#E3B04F; --warn-bg:#352812; --chip:#2B2F36;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:16px; line-height:1.45;
+}
+.wrap{max-width:680px; margin:0 auto; padding:0 16px 48px}
+button{font:inherit; color:inherit}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+
+/* sticky progress */
+.bar{position:sticky; top:0; z-index:10; background:color-mix(in srgb,var(--bg) 88%,transparent);
+  -webkit-backdrop-filter:saturate(1.4) blur(12px); backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--line)}
+.bar-inner{max-width:680px; margin:0 auto; padding:10px 16px 8px}
+.bar-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.count{font-weight:600; font-variant-numeric:tabular-nums}
+.chip{display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:999px; font-size:13px; font-weight:600; background:var(--chip); color:var(--muted)}
+.chip.fail{background:var(--fail-bg); color:var(--fail)}
+.chip.warn{background:var(--warn-bg); color:var(--warn)}
+.track{height:4px; border-radius:2px; background:var(--line); margin-top:8px; overflow:hidden}
+.fill{height:100%; width:0; background:var(--accent); transition:width .25s ease}
+.steps{display:flex; gap:6px; overflow-x:auto; padding-top:8px; scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.steps a{flex:0 0 auto; text-decoration:none; color:var(--muted); font-size:13px; font-weight:600;
+  padding:4px 10px; border-radius:999px; background:var(--card); border:1px solid var(--line)}
+.steps a.done{color:var(--pass); border-color:color-mix(in srgb,var(--pass) 40%,var(--line))}
+.steps a.bad{color:var(--fail); border-color:color-mix(in srgb,var(--fail) 45%,var(--line))}
+
+/* header */
+header{padding:22px 0 6px}
+h1{font-size:30px; line-height:1.15; letter-spacing:-.02em; margin:0 0 8px; font-weight:750}
+.lede{color:var(--muted); margin:0; max-width:60ch}
+
+/* reference card styled like iOS Settings */
+.group-title{font-size:13px; color:var(--muted); margin:22px 4px 6px; font-weight:600}
+.list{background:var(--card); border-radius:var(--radius-lg); overflow:hidden}
+.kv{display:flex; justify-content:space-between; gap:12px; padding:11px 16px; border-top:1px solid var(--line)}
+.kv:first-child{border-top:0}
+.kv span:first-child{color:var(--ink); flex:0 0 38%}
+.kv span:last-child{color:var(--muted); text-align:right; flex:1}
+.kv b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+.foot{font-size:13px; color:var(--muted); margin:6px 4px 0}
+
+/* sections */
+section{scroll-margin-top:112px; margin-top:30px}
+.sec-head{display:flex; align-items:center; gap:10px; margin:0 4px 4px}
+.sec-num{flex:0 0 auto; width:28px; height:28px; border-radius:50%; display:grid; place-items:center;
+  background:var(--accent); color:var(--accent-ink); font-weight:700; font-size:14px}
+h2{font-size:21px; letter-spacing:-.01em; margin:0; font-weight:700}
+.sec-intro{color:var(--muted); margin:2px 4px 10px 42px; font-size:15px}
+
+.item{padding:14px 16px; border-top:1px solid var(--line); transition:background .2s ease}
+.item:first-child{border-top:0}
+.item.is-pass{background:color-mix(in srgb,var(--pass-bg) 55%,var(--card))}
+.item.is-fail{background:var(--fail-bg)}
+.item-top{display:flex; align-items:flex-start; gap:8px}
+.item h3{font-size:17px; margin:0; font-weight:650; flex:1}
+.must{flex:0 0 auto; font-size:12px; font-weight:700; color:var(--fail); background:var(--fail-bg);
+  padding:2px 8px; border-radius:999px; margin-top:2px}
+.item.is-fail .must{background:var(--card)}
+.path{display:inline-block; margin:6px 0 0; font-size:13px; font-weight:600; color:var(--accent);
+  background:var(--accent-soft); padding:3px 9px; border-radius:var(--radius-sm)}
+.how{margin:6px 0 0; color:var(--muted); font-size:15px}
+.expect{margin:6px 0 0; font-size:15px}
+.expect b{font-weight:650}
+.iffail{display:none; margin:8px 0 0; font-size:14px; color:var(--fail); font-weight:600}
+.item.is-fail .iffail{display:block}
+.btns{display:flex; gap:8px; margin-top:12px}
+.btns button{flex:1; min-height:44px; border-radius:10px; border:1.5px solid var(--line);
+  background:var(--card); font-weight:650; cursor:pointer}
+.btns .b-pass[aria-pressed="true"]{background:var(--pass); border-color:var(--pass); color:var(--card)}
+.btns .b-fail[aria-pressed="true"]{background:var(--fail); border-color:var(--fail); color:var(--card)}
+
+/* tools inside items */
+.tool{margin-top:10px; display:grid; gap:8px}
+.tool label{font-size:13px; color:var(--muted); font-weight:600}
+.tool input{width:100%; font:inherit; font-variant-numeric:tabular-nums; padding:10px 12px;
+  border-radius:10px; border:1.5px solid var(--line); background:var(--bg); color:var(--ink)}
+.match{font-size:14px; font-weight:650}
+.match.ok{color:var(--pass)} .match.no{color:var(--fail)}
+.ghost{min-height:44px; border-radius:10px; border:1.5px solid var(--accent); background:transparent;
+  color:var(--accent); font-weight:650; cursor:pointer}
+
+/* verdict */
+.verdict{margin-top:30px; border-radius:var(--radius-lg); padding:18px 18px 16px; background:var(--card);
+  border:2px solid var(--line)}
+.verdict h2{font-size:22px}
+.verdict p{margin:6px 0 0; color:var(--muted)}
+.verdict ul{margin:10px 0 0; padding-left:20px}
+.verdict li{margin:3px 0}
+.verdict.no{border-color:var(--fail); background:var(--fail-bg)}
+.verdict.no h2{color:var(--fail)}
+.verdict.maybe{border-color:var(--warn); background:var(--warn-bg)}
+.verdict.maybe h2{color:var(--warn)}
+.verdict.yes{border-color:var(--pass); background:var(--pass-bg)}
+.verdict.yes h2{color:var(--pass)}
+.reset{margin-top:18px; width:100%; min-height:44px; border-radius:10px; border:1.5px solid var(--line);
+  background:transparent; color:var(--muted); font-weight:600; cursor:pointer}
+
+/* screen test overlay */
+#screen{position:fixed; inset:0; z-index:100; display:none; cursor:pointer}
+#screen.on{display:block}
+#screen .hint{position:absolute; left:50%; bottom:calc(28px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+  background:rgba(0,0,0,.6); color:#fff; font-size:14px; padding:6px 12px; border-radius:999px;
+  transition:opacity .4s ease}
+#screen .hint.hide{opacity:0}
+
+@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
+</style>
+</head>
+<body>
+
+<div class="bar" role="status" aria-live="polite">
+  <div class="bar-inner">
+    <div class="bar-row">
+      <span class="count" id="count">Đã kiểm 0/0</span>
+      <span class="chip fail" id="chipCrit" hidden>Lỗi bắt buộc: 0</span>
+      <span class="chip warn" id="chipOther" hidden>Lỗi khác: 0</span>
+    </div>
+    <div class="track"><div class="fill" id="fill"></div></div>
+    <nav class="steps" id="steps" aria-label="Các bước"></nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>Kiểm tra iPhone 17 Pro Max cũ</h1>
+    <p class="lede">Làm lần lượt từ trên xuống khi gặp người bán. Mỗi mục bấm Đạt hoặc Lỗi. Mục có nhãn Bắt buộc mà lỗi thì không mua. Kết quả được lưu trên máy này, đóng trang mở lại vẫn còn.</p>
+  </header>
+
+  <div class="group-title">Thông tin máy cần đối chiếu</div>
+  <div class="list">
+    <div class="kv"><span>Tên máy</span><span><b>iPhone 17 Pro Max</b></span></div>
+    <div class="kv"><span>Số máy</span><span><b>MFYN4ZA/A</b><br>256 GB, Cosmic Orange, bản quốc tế có khe SIM và eSIM</span></div>
+    <div class="kv"><span>Số sê-ri</span><span><b>MT77F6YYPV</b></span></div>
+    <div class="kv"><span>Ngày mua hợp lệ</span><span><b>24/10/2025</b></span></div>
+    <div class="kv"><span>Bảo hành Apple</span><span>Đến <b>4/11/2026</b>, gần như không dùng được ở Nga</span></div>
+    <div class="kv"><span>Pin theo ảnh người bán</span><span><b>90%</b>, <b>361</b> chu kỳ<br>Sản xuất 8/2025, dùng từ 11/2025</span></div>
+    <div class="kv"><span>Giá thỏa thuận</span><span><b>71.000 ₽</b>, khoảng 21 triệu đồng</span></div>
+    <div class="kv"><span>Giá tham khảo ở Việt Nam</span><span>Cũ 28,9–30 triệu, mới khoảng 34 triệu</span></div>
+  </div>
+  <p class="foot">Số liệu lấy từ ảnh người bán gửi và trang tra bảo hành của Apple ngày 20/10/2026.</p>
+
+  <main id="sections"></main>
+
+  <div class="verdict" id="verdict" aria-live="polite"></div>
+  <button class="reset" id="reset" type="button">Xóa kết quả, làm lại từ đầu</button>
+</div>
+
+<div id="screen" role="dialog" aria-label="Thử màn hình"><div class="hint" id="screenHint"></div></div>
+
+<script>
+(function(){
+  var SECTIONS = [
+    { id:"s0", title:"Chuẩn bị trước khi gặp", items:[
+      { id:"p1", t:"Xin ảnh phần còn thiếu",
+        how:"Nhờ người bán mở Giới thiệu, kéo xuống dưới dòng SEID rồi chụp lại, hoặc bấm *#06# và chụp màn hình.",
+        expect:"Thấy dòng Khóa mạng và số IMEI." },
+      { id:"p2", t:"Mang đủ đồ",
+        how:"Que chọc SIM, SIM Tele2 của bạn, cáp USB-C, AirPods, iPhone của bạn bật Điểm truy cập cá nhân để cài máy khi không có Wi-Fi." },
+      { id:"p3", t:"Chọn chỗ hẹn",
+        how:"Nơi đủ sáng, có ổ điện, đủ yên để nghe loa và micro. Dành khoảng 30 đến 40 phút." }
+    ]},
+    { id:"s1", title:"Ngoại hình", items:[
+      { id:"a1", t:"Khe SIM", crit:true,
+        how:"Cạnh trái máy, ngay dưới hai nút âm lượng, phải có một khay nhỏ cùng màu vỏ, bên cạnh có lỗ chọc SIM.",
+        expect:"Có khay SIM.",
+        fail:"Không có khay: phần cứng không khớp với số máy ZA/A. Không mua." },
+      { id:"a2", t:"Mặt màn hình", crit:true,
+        how:"Nhìn nghiêng dưới đèn.",
+        expect:"Không nứt, khe giữa màn và viền đều, màn không bị đội lên.",
+        fail:"Màn đội lên thường do pin phồng. Không mua." },
+      { id:"a3", t:"Khung viền và mặt lưng",
+        how:"Xoay máy dưới đèn, soi 4 góc và kính lưng.",
+        expect:"Trầy nhẹ chấp nhận được. Móp góc hoặc nứt kính lưng thì trả giá." },
+      { id:"a4", t:"Cụm camera",
+        how:"Soi kính của từng ống kính và viền nhôm quanh cụm camera.",
+        expect:"Kính không nứt, không xước sâu." },
+      { id:"a5", t:"Ốc cạnh cổng sạc",
+        how:"Nhìn hai con ốc nhỏ ở hai bên cổng USB-C.",
+        expect:"Đầu ốc nguyên, không trầy.",
+        fail:"Ốc trầy là dấu hiệu máy từng bị mở. Soi kỹ mục Linh kiện." }
+    ]},
+    { id:"s2", title:"Thông tin trong Cài đặt", items:[
+      { id:"b1", t:"Tên máy và số máy", crit:true, path:"Cài đặt › Cài đặt chung › Giới thiệu",
+        expect:"<b>iPhone 17 Pro Max</b>, số máy <b>MFYN4ZA/A</b>.",
+        fail:"Không khớp: không phải máy đã hỏi. Không mua." },
+      { id:"b2", t:"Số sê-ri", crit:true, path:"Cài đặt › Cài đặt chung › Giới thiệu",
+        expect:"<b>MT77F6YYPV</b>, đúng từng ký tự.",
+        fail:"Khác số đã tra trên trang Apple: không phải máy đã hỏi. Không mua." },
+      { id:"b3", t:"Khóa mạng", crit:true, path:"Cài đặt › Cài đặt chung › Giới thiệu",
+        how:"Kéo xuống dưới dòng SEID.",
+        expect:"<b>Không giới hạn SIM</b>.",
+        fail:"Hiện tên nhà mạng hoặc dòng khác: máy bị khóa mạng. Không mua." },
+      { id:"b4", t:"Linh kiện", crit:true, path:"Cài đặt › Cài đặt chung › Giới thiệu",
+        how:"Nếu có mục Lịch sử linh kiện và dịch vụ ngay dưới số sê-ri, mở ra xem.",
+        expect:"Không có mục này, hoặc chỉ ghi Linh kiện chính hãng Apple.",
+        fail:"Có Linh kiện không xác định: máy đã thay đồ không chính hãng. Không mua." },
+      { id:"b5", t:"IMEI", tool:"imei",
+        how:"Bấm *#06# để xem IMEI. Mở khay SIM, chụp số khắc trên khay rồi phóng to để đọc. Nhập cả hai số vào ô dưới.",
+        expect:"Số trên khay trùng với IMEI thứ nhất.",
+        fail:"Không trùng: có thể chỉ thay khay, nhưng máy đã qua sửa chữa. Soi kỹ các mục khác." },
+      { id:"b6", t:"Pin", path:"Cài đặt › Pin › Tình trạng pin",
+        expect:"Khoảng <b>90%</b>, khoảng <b>361</b> chu kỳ hoặc nhỉnh hơn, trạng thái Bình thường.",
+        fail:"Thấp hơn nhiều hoặc báo Bảo trì: trả giá." },
+      { id:"b7", t:"Quản lý thiết bị", crit:true, path:"Cài đặt › Cài đặt chung › VPN & Quản lý thiết bị",
+        expect:"Không có hồ sơ cấu hình hay mục Quản lý thiết bị nào.",
+        fail:"Có hồ sơ quản lý: máy của công ty hoặc trường học, có thể bị khóa từ xa. Không mua." }
+    ]},
+    { id:"s3", title:"Màn hình", items:[
+      { id:"c1", t:"True Tone", path:"Cài đặt › Màn hình & Độ sáng",
+        how:"Bật rồi tắt True Tone. Đưa máy từ chỗ đèn vàng sang chỗ đèn trắng.",
+        expect:"Có công tắc True Tone, màu màn hình đổi rõ khi đổi nguồn sáng.",
+        fail:"Mất True Tone: nhiều khả năng đã thay màn. Trả giá mạnh hoặc bỏ." },
+      { id:"c2", t:"Điểm chết và ám màu", tool:"screen",
+        how:"Mở file này trên chính chiếc máy đang kiểm tra (gửi qua AirDrop hoặc tin nhắn), bấm Thử màn hình, chạm để đổi màu.",
+        expect:"Không có chấm sáng, chấm đen, vệt sọc hay mảng ám màu." },
+      { id:"c3", t:"Cảm ứng",
+        how:"Giữ một biểu tượng rồi kéo đi khắp màn hình, qua cả 4 góc. Gõ thử bàn phím.",
+        expect:"Biểu tượng đi theo ngón tay liên tục, không khựng." },
+      { id:"c4", t:"Độ sáng và độ mượt",
+        how:"Kéo độ sáng lên tối đa rồi xuống thấp nhất. Cuộn một trang web dài.",
+        expect:"Không nhấp nháy, cuộn mượt." }
+    ]},
+    { id:"s4", title:"Camera", items:[
+      { id:"d1", t:"Từng ống kính", crit:true,
+        how:"Mở Camera, bấm lần lượt 0.5x, 1x, 2x, 4x, 8x.",
+        expect:"Mỗi mức chuyển mượt, ảnh nét, không đen màn hay báo lỗi.",
+        fail:"Một ống kính không lên hình: hỏng camera. Không mua." },
+      { id:"d2", t:"Chống rung", crit:true,
+        how:"Quay video 4K, vừa đi vừa lắc nhẹ máy. Áp tai vào cụm camera khi lắc.",
+        expect:"Hình ổn định, không có tiếng lạch cạch hay rè.",
+        fail:"Hình rung giật hoặc có tiếng lạch cạch: hỏng bộ chống rung. Không mua." },
+      { id:"d3", t:"Lấy nét gần",
+        how:"Đưa camera cách vật khoảng 10 cm.",
+        expect:"Hiện biểu tượng bông hoa, nét ngay, không giật nét." },
+      { id:"d4", t:"Bụi trong ống kính",
+        how:"Chĩa từng ống vào tường trắng hoặc bầu trời.",
+        expect:"Không có chấm mờ cố định trên ảnh." },
+      { id:"d5", t:"Camera trước",
+        how:"Chụp selfie, rồi xoay ngang máy chụp thêm một tấm.",
+        expect:"Ảnh nét, khung hình rộng ra khi xoay ngang." },
+      { id:"d6", t:"Flash, chụp đêm, chân dung",
+        how:"Chụp một tấm có flash, một tấm ở góc tối, một tấm chân dung xóa phông.",
+        expect:"Flash sáng, chế độ ban đêm tự bật, xóa phông bình thường." }
+    ]},
+    { id:"s5", title:"Nút bấm, loa, micro", items:[
+      { id:"e1", t:"Nút nguồn, âm lượng, nút Tác vụ",
+        how:"Bấm từng nút. Nút Tác vụ ở cạnh trái, phía trên cùng.",
+        expect:"Bấm có cảm giác tách rõ, không lún, không kẹt." },
+      { id:"e2", t:"Nút Điều khiển Camera",
+        how:"Cạnh phải, dưới nút nguồn. Bấm một lần để mở camera, chạm nhẹ rồi vuốt để zoom, bấm mạnh để chụp, giữ để quay video.",
+        expect:"Cả bốn thao tác đều ăn.",
+        fail:"Nút lỗi tốn tiền sửa: trả giá mạnh hoặc bỏ." },
+      { id:"e3", t:"Loa",
+        how:"Mở nhạc ở mức to nhất, lần lượt che loa dưới và loa thoại phía trên.",
+        expect:"Cả hai loa đều kêu, không rè." },
+      { id:"e4", t:"Micro",
+        how:"Ghi âm vài giây bằng app Ghi âm, quay một video selfie, rồi nghe lại.",
+        expect:"Tiếng rõ, không rè, không nhỏ bất thường." },
+      { id:"e5", t:"Rung",
+        how:"Giữ nút Tác vụ để bật rồi tắt chế độ im lặng.",
+        expect:"Máy rung rõ và êm." }
+    ]},
+    { id:"s6", title:"Sóng, kết nối, cảm biến", items:[
+      { id:"f1", t:"SIM và cuộc gọi", crit:true,
+        how:"Cắm SIM Tele2 của bạn vào khay, gọi cho một người quen.",
+        expect:"Có sóng 4G hoặc 5G, hai bên nghe rõ.",
+        fail:"Không nhận SIM hoặc không gọi được. Không mua." },
+      { id:"f2", t:"Cảm biến tiệm cận",
+        how:"Trong lúc gọi, đưa máy sát tai.",
+        expect:"Màn hình tắt khi sát tai, sáng lại khi đưa ra." },
+      { id:"f3", t:"Sạc", crit:true,
+        how:"Cắm cáp USB-C vào ổ điện hoặc sạc dự phòng.",
+        expect:"Hiện biểu tượng sạc, phần trăm pin tăng dần.",
+        fail:"Không nhận sạc. Không mua." },
+      { id:"f4", t:"Wi-Fi và Bluetooth",
+        how:"Bắt Wi-Fi hoặc điểm truy cập từ máy bạn, kết nối AirPods.",
+        expect:"Kết nối nhanh, không rớt." },
+      { id:"f5", t:"Định vị và la bàn",
+        how:"Mở Bản đồ xem chấm vị trí và hướng. Mở app La bàn.",
+        expect:"Vị trí đúng, hướng xoay theo máy." }
+    ]},
+    { id:"s7", title:"Xóa máy và cài bằng Apple ID của bạn", intro:"Làm sau cùng, ngay trước khi trả tiền.", items:[
+      { id:"g1", t:"Người bán đăng xuất Apple ID", crit:true, path:"Cài đặt › [tên người bán] › Đăng xuất",
+        expect:"Người bán tự nhập mật khẩu và đăng xuất được.",
+        fail:"Không đăng xuất được hoặc kêu quên mật khẩu. Không mua." },
+      { id:"g2", t:"Xóa toàn bộ máy", crit:true, path:"Cài đặt › Cài đặt chung › Chuyển hoặc đặt lại iPhone › Xóa tất cả nội dung và cài đặt",
+        expect:"Máy khởi động lại vào màn hình Xin chào." },
+      { id:"g3", t:"Màn hình cài đặt", crit:true,
+        how:"Cài như máy mới, kết nối mạng qua điểm truy cập của bạn.",
+        expect:"Không hiện màn hình Khóa kích hoạt đòi Apple ID cũ, không hiện Quản lý từ xa.",
+        fail:"Máy còn khóa kích hoạt hoặc bị quản lý từ xa. Không mua." },
+      { id:"g4", t:"Đăng nhập Apple ID của bạn", crit:true,
+        how:"Đăng nhập xong, mở app Tìm.",
+        expect:"Máy hiện trong mục Thiết bị của bạn." },
+      { id:"g5", t:"Face ID", crit:true,
+        how:"Cài Face ID, khóa rồi mở khóa vài lần.",
+        expect:"Cài được, nhận mặt nhanh.",
+        fail:"Báo không cài được Face ID: hỏng cụm camera trước. Không mua." }
+    ]},
+    { id:"s8", title:"Giấy tờ và trả tiền", items:[
+      { id:"h1", t:"Hộp và hóa đơn",
+        how:"Nếu có hộp, so số sê-ri và IMEI in trên tem hộp.",
+        expect:"Khớp với số trong máy." },
+      { id:"h2", t:"Giấy mua bán",
+        how:"Viết giấy biên nhận (расписка): tên người bán, ngày, giá, số sê-ri, IMEI, chữ ký. Chụp ảnh lại.",
+        expect:"Có giấy và ảnh chụp." },
+      { id:"h3", t:"Trả tiền",
+        how:"Chỉ trả sau khi xong bước 7.",
+        expect:"Máy đã nằm trong app Tìm của bạn." }
+    ]}
+  ];
+
+  var KEY = "ip17pm-checklist-v1";
+  var state = { r:{}, imei1:"", imei2:"" };
+  try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved && saved.r) state = saved; } catch(e) {}
+  function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e) {} }
+
+  var all = [];
+  SECTIONS.forEach(function(s){ s.items.forEach(function(it){ it.sec = s; all.push(it); }); });
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]; }); }
+
+  // render sections
+  var main = document.getElementById("sections");
+  var nav = document.getElementById("steps");
+  var html = "", navHtml = "";
+  SECTIONS.forEach(function(s, i){
+    navHtml += '<a href="#'+s.id+'" data-sec="'+s.id+'">'+i+'. '+esc(s.title)+'</a>';
+    html += '<section id="'+s.id+'"><div class="sec-head"><span class="sec-num">'+i+'</span><h2>'+esc(s.title)+'</h2></div>';
+    if (s.intro) html += '<p class="sec-intro">'+esc(s.intro)+'</p>';
+    html += '<div class="list" style="margin-top:10px">';
+    s.items.forEach(function(it){
+      html += '<div class="item" id="it-'+it.id+'" data-id="'+it.id+'">';
+      html += '<div class="item-top"><h3>'+esc(it.t)+'</h3>'+(it.crit?'<span class="must">Bắt buộc</span>':'')+'</div>';
+      if (it.path) html += '<span class="path">'+esc(it.path)+'</span>';
+      if (it.how) html += '<p class="how">'+esc(it.how)+'</p>';
+      if (it.expect) html += '<p class="expect"><b>Phải thấy:</b> '+it.expect+'</p>';
+      if (it.tool === "imei") {
+        html += '<div class="tool">'
+          + '<label for="imei1">IMEI thứ nhất trong máy</label><input id="imei1" inputmode="numeric" autocomplete="off" placeholder="15 chữ số">'
+          + '<label for="imei2">Số khắc trên khay SIM</label><input id="imei2" inputmode="numeric" autocomplete="off" placeholder="15 chữ số">'
+          + '<div class="match" id="imeiMatch"></div></div>';
+      }
+      if (it.tool === "screen") {
+        html += '<div class="tool"><button class="ghost" type="button" id="screenBtn">Thử màn hình</button></div>';
+      }
+      if (it.fail) html += '<p class="iffail">'+esc(it.fail)+'</p>';
+      else if (it.crit) html += '<p class="iffail">Lỗi ở mục bắt buộc. Không mua.</p>';
+      html += '<div class="btns"><button type="button" class="b-pass" data-v="pass" aria-pressed="false">Đạt</button>'
+            + '<button type="button" class="b-fail" data-v="fail" aria-pressed="false">Lỗi</button></div>';
+      html += '</div>';
+    });
+    html += '</div></section>';
+  });
+  main.innerHTML = html;
+  nav.innerHTML = navHtml;
+
+  main.addEventListener("click", function(e){
+    var b = e.target.closest(".btns button"); if (!b) return;
+    var id = b.closest(".item").getAttribute("data-id");
+    var v = b.getAttribute("data-v");
+    if (state.r[id] === v) delete state.r[id]; else state.r[id] = v;
+    save(); update();
+  });
+
+  // IMEI compare
+  var i1 = document.getElementById("imei1"), i2 = document.getElementById("imei2"), im = document.getElementById("imeiMatch");
+  function digits(s){ return (s||"").replace(/\D/g,""); }
+  function imeiCheck(){
+    var a = digits(i1.value), b = digits(i2.value);
+    state.imei1 = i1.value; state.imei2 = i2.value; save();
+    if (!a || !b) { im.textContent = ""; im.className = "match"; return; }
+    if (a === b) { im.textContent = "Hai số khớp nhau."; im.className = "match ok"; }
+    else { im.textContent = "Hai số không khớp. Kiểm tra lại từng chữ số."; im.className = "match no"; }
+  }
+  if (i1 && i2) { i1.value = state.imei1 || ""; i2.value = state.imei2 || ""; i1.addEventListener("input", imeiCheck); i2.addEventListener("input", imeiCheck); imeiCheck(); }
+
+  // screen test
+  var COLORS = [["#FFFFFF","Trắng"],["#000000","Đen"],["#FF0000","Đỏ"],["#00FF00","Xanh lá"],["#0000FF","Xanh dương"],["#808080","Xám"]];
+  var scr = document.getElementById("screen"), hint = document.getElementById("screenHint"), ci = 0, ht;
+  function showColor(){
+    scr.style.background = COLORS[ci][0];
+    hint.textContent = COLORS[ci][1] + " " + (ci+1) + "/" + COLORS.length + ". Chạm để đổi màu";
+    hint.classList.remove("hide"); clearTimeout(ht); ht = setTimeout(function(){ hint.classList.add("hide"); }, 1500);
+  }
+  var sb = document.getElementById("screenBtn");
+  if (sb) sb.addEventListener("click", function(){ ci = 0; scr.classList.add("on"); showColor(); });
+  scr.addEventListener("click", function(){
+    ci++; if (ci >= COLORS.length) { scr.classList.remove("on"); return; }
+    showColor();
+  });
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") scr.classList.remove("on"); });
+
+  // verdict + progress
+  var verdict = document.getElementById("verdict");
+  function update(){
+    var done = 0, crit = [], other = [];
+    all.forEach(function(it){
+      var v = state.r[it.id];
+      var el = document.getElementById("it-"+it.id);
+      el.classList.toggle("is-pass", v === "pass");
+      el.classList.toggle("is-fail", v === "fail");
+      el.querySelector(".b-pass").setAttribute("aria-pressed", v === "pass" ? "true" : "false");
+      el.querySelector(".b-fail").setAttribute("aria-pressed", v === "fail" ? "true" : "false");
+      if (v) done++;
+      if (v === "fail") (it.crit ? crit : other).push(it);
+    });
+    document.getElementById("count").textContent = "Đã kiểm " + done + "/" + all.length;
+    document.getElementById("fill").style.width = (all.length ? done/all.length*100 : 0) + "%";
+    var cc = document.getElementById("chipCrit"), co = document.getElementById("chipOther");
+    cc.hidden = !crit.length; cc.textContent = "Lỗi bắt buộc: " + crit.length;
+    co.hidden = !other.length; co.textContent = "Lỗi khác: " + other.length;
+
+    SECTIONS.forEach(function(s){
+      var a = nav.querySelector('[data-sec="'+s.id+'"]');
+      var n = s.items.filter(function(it){ return state.r[it.id]; }).length;
+      var bad = s.items.some(function(it){ return state.r[it.id] === "fail"; });
+      a.classList.toggle("bad", bad);
+      a.classList.toggle("done", !bad && n === s.items.length);
+    });
+
+    function list(arr){ return "<ul>" + arr.map(function(it){ return "<li>" + esc(it.sec.title) + ": " + esc(it.t) + "</li>"; }).join("") + "</ul>"; }
+    var left = all.length - done;
+    if (crit.length) {
+      verdict.className = "verdict no";
+      verdict.innerHTML = "<h2>Không nên mua</h2><p>Có lỗi ở mục bắt buộc:</p>" + list(crit)
+        + (other.length ? "<p>Lỗi khác:</p>" + list(other) : "");
+    } else if (other.length) {
+      verdict.className = "verdict maybe";
+      verdict.innerHTML = "<h2>Cân nhắc và trả giá</h2><p>Không có lỗi bắt buộc, nhưng có các điểm sau để thương lượng:</p>" + list(other)
+        + (left ? "<p>Còn " + left + " mục chưa kiểm.</p>" : "");
+    } else if (!left) {
+      verdict.className = "verdict yes";
+      verdict.innerHTML = "<h2>Có thể mua</h2><p>Mọi mục đều đạt. Với tình trạng này, 71.000 ₽ là giá tốt.</p>";
+    } else {
+      verdict.className = "verdict";
+      verdict.innerHTML = "<h2>Còn " + left + " mục chưa kiểm</h2><p>Chưa có lỗi nào. Làm tiếp từ mục đầu tiên chưa bấm.</p>";
+    }
+  }
+
+  document.getElementById("reset").addEventListener("click", function(){
+    if (!confirm("Xóa toàn bộ kết quả đã bấm và số IMEI đã nhập?")) return;
+    state = { r:{}, imei1:"", imei2:"" }; save();
+    if (i1) { i1.value = ""; i2.value = ""; imeiCheck(); }
+    update(); window.scrollTo(0,0);
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>

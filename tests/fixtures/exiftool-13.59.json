@@ -1,0 +1,119 @@
+[{
+  "SourceFile": "Canon.jpg",
+  "Make": "Canon",
+  "Model": "Canon EOS DIGITAL REBEL",
+  "SerialNumber": 560018150
+},
+{
+  "SourceFile": "Canon1DmkIII.jpg",
+  "Make": "Canon",
+  "Model": "Canon EOS-1D Mark III",
+  "SerialNumber": 500292,
+  "InternalSerialNumber": "G002669",
+  "ShutterCount": 1
+},
+{
+  "SourceFile": "FujiFilm.jpg",
+  "Make": "FUJIFILM",
+  "Model": "FinePix2400Zoom"
+},
+{
+  "SourceFile": "NikonD2Hs.jpg",
+  "Make": "NIKON CORPORATION",
+  "Model": "NIKON D2Hs",
+  "SerialNumber": 3001006,
+  "ShutterCount": 2,
+  "ImageCount": 2
+},
+{
+  "SourceFile": "NikonD70.jpg",
+  "Make": "NIKON CORPORATION",
+  "Model": "NIKON D70",
+  "SerialNumber": "NO= 20025585        ",
+  "ShutterCount": 526
+},
+{
+  "SourceFile": "Pentax.jpg",
+  "Make": "PENTAX Corporation",
+  "Model": "PENTAX K10D",
+  "InternalSerialNumber": 132352,
+  "ShutterCount": 1648
+},
+{
+  "SourceFile": "canon-r10.jpg",
+  "Make": "Canon",
+  "Model": "Canon EOS R10",
+  "SerialNumber": 4242
+},
+{
+  "SourceFile": "canon-r50.jpg",
+  "Make": "Canon",
+  "Model": "Canon EOS R50",
+  "SerialNumber": 98765,
+  "ShutterCount": 12345
+},
+{
+  "SourceFile": "canon-r6.jpg",
+  "Make": "Canon",
+  "Model": "Canon EOS R6",
+  "SerialNumber": 123456789,
+  "ShutterCount": 45678
+},
+{
+  "SourceFile": "fuji-xt5.jpg",
+  "Make": "FUJIFILM",
+  "Model": "X-T5",
+  "InternalSerialNumber": "FF12345678 ABCDEF",
+  "ImageCount": 9876
+},
+{
+  "SourceFile": "nikon-d850.jpg",
+  "Make": "NIKON CORPORATION",
+  "Model": "NIKON D850",
+  "SerialNumber": 7654321,
+  "ShutterCount": 120000,
+  "MechanicalShutterCount": 98000
+},
+{
+  "SourceFile": "nikon-z6ii.jpg",
+  "Make": "NIKON CORPORATION",
+  "Model": "NIKON Z 6_2",
+  "SerialNumber": 6012345,
+  "ShutterCount": 34567
+},
+{
+  "SourceFile": "sony-a6700.jpg",
+  "Make": "SONY",
+  "Model": "ILCE-6700",
+  "InternalSerialNumber": "144 151 158 165 172 179",
+  "ShutterCount": 8765
+},
+{
+  "SourceFile": "sony-a77.jpg",
+  "Make": "SONY",
+  "Model": "SLT-A77V",
+  "InternalSerialNumber": "177 184 191 198 205",
+  "ShutterCount": 54321
+},
+{
+  "SourceFile": "sony-a7iii.jpg",
+  "Make": "SONY",
+  "Model": "ILCE-7M3",
+  "SerialNumber": "SONY-BODY-1",
+  "InternalSerialNumber": "202 209 216 223 230 237",
+  "ShutterCount": 23456
+},
+{
+  "SourceFile": "sony-a7iv.jpg",
+  "Make": "SONY",
+  "Model": "ILCE-7M4",
+  "InternalSerialNumber": "202 209 216 223 230 237",
+  "ShutterCount": 1752286
+},
+{
+  "SourceFile": "sony-zve10.jpg",
+  "Make": "SONY",
+  "Model": "ZV-E10",
+  "InternalSerialNumber": "202 209 216 223 230 237",
+  "ShutterCount": 5432
+}]
