@@ -17,7 +17,7 @@ Bản đầu làm ba nhóm: **điện thoại** (iPhone SE 2 → 18 Pro Max, Gal
 
 ## Công cụ có sẵn
 
-Thử màn hình theo màu, thử cảm ứng phủ ô, loa trái/phải và quét tần số, ghi âm thử micro, tiếng ồn để thử chống ồn, cảm biến và rung, xem từng camera, trạng thái sạc (Android), tính độ chai pin tai nghe sau 20 phút nghe, đối chiếu số model AirPods, đọc ảnh máy ảnh (EXIF/MakerNote), tìm bụi cảm biến từ ảnh tường trắng, tìm điểm nóng và hàng/cột chết từ ảnh đậy nắp.
+Thử màn hình theo màu, thử cảm ứng phủ ô, loa trái/phải và quét tần số, ghi âm thử micro, tiếng ồn để thử chống ồn, cảm biến và rung, xem từng camera, trạng thái sạc (Android), tính độ chai pin tai nghe sau 20 phút nghe, đối chiếu số model AirPods, đọc ảnh máy ảnh (EXIF/MakerNote), tìm bụi cảm biến từ ảnh tường trắng, tìm điểm nóng và hàng/cột chết từ ảnh đậy nắp, **đọc độ khoẻ pin máy Samsung** (ASOC/BSOH, số vòng sạc) từ tệp nhật ký `*#9900#`: chọn tệp `dumpState_….zip` là app tự giải nén và dò ngay trên máy, khoảng một giây, đồng thời cảnh báo nếu nhật ký là của máy khác model trong phiếu.
 
 Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu trong trình duyệt (localStorage); chuyển máy bằng Cài đặt › Sao chép toàn bộ phiếu.
 
@@ -29,7 +29,7 @@ Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu 
 | `src/data-common.js` | Mức chấm, hạng, hệ số ngoại hình, khấu hao, tiền tệ, ngưỡng kết luận |
 | `src/data-phone.js`, `data-headphones.js`, `data-camera.js` | Danh mục máy và các mục kiểm theo từng loại |
 | `src/data-money.js` | Bảng chi phí sửa theo bộ phận và luật trừ tiền cho từng mục |
-| `src/decode.js` | Giải mã số máy Apple, IMEI, số model AirPods, EXIF/MakerNote máy ảnh |
+| `src/decode.js` | Giải mã số máy Apple, IMEI, số model AirPods, EXIF/MakerNote máy ảnh, đọc ZIP và dò pin trong nhật ký Samsung |
 | `src/engine.js` | Chấm điểm, định giá, kết luận, báo cáo (không dùng DOM, chạy được trong Node) |
 | `src/tools.js`, `src/ui.js`, `src/app.js` | Công cụ kiểm, giao diện, xử lý thao tác |
 | `src/styles.css`, `src/shell.html` | Giao diện, biểu tượng |
@@ -46,10 +46,10 @@ Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu 
 
 ```bash
 python3 build.py            # tạo dist/ và cập nhật index.html, sw.js, manifest ở thư mục gốc
-node tests/run.js           # 117 kiểm thử lõi: IMEI, số máy, tiền, chấm điểm, định giá, EXIF
+node tests/run.js           # 130 kiểm thử lõi: IMEI, số máy, tiền, chấm điểm, định giá, EXIF, pin Galaxy
 node tests/ui-smoke.js      # chụp màn hình 390px sáng/tối (cần Playwright)
 node tests/tool-smoke.js    # chạy thử công cụ đọc ảnh, bụi, điểm nóng, pin tai nghe
-python3 tests/make_fixtures.py   # tạo lại ảnh JPEG mẫu cho Canon R6/R50, Sony, Nikon Z, Fujifilm
+python3 tests/make_fixtures.py   # tạo lại ảnh JPEG mẫu (Canon, Sony, Nikon Z, Fujifilm) và nhật ký Samsung mẫu
 ```
 
 Muốn thêm một model: thêm một dòng vào danh mục trong `src/data-*.js` (cờ như `faceId`, `action`, `esim`, `anc`, `ibis`, `sc`...). Muốn thêm một loại đồ mới: tạo `data-<loại>.js` theo mẫu, thêm vào `CATEGORIES` và `JS_FILES` trong `build.py`.

@@ -290,3 +290,5 @@ textarea.inp { resize: vertical; min-height: 92px; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+.gb-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.gb-raw { white-space: pre-wrap; word-break: break-all; margin: 6px 0 0; background: var(--sunk); border-radius: 8px; padding: 8px 10px; }

@@ -39,16 +39,16 @@ const PHONE_MODELS = [
   { id: 'ip-18p', brand: 'apple', name: 'iPhone 18 Pro', year: 2026, faceId: true, oled: true, parts: 'full', truetone: true, magsafe: true, usbc: true, cycles: true, action: true, camCtrl: true },
   { id: 'ip-18pm', brand: 'apple', name: 'iPhone 18 Pro Max', year: 2026, faceId: true, oled: true, parts: 'full', truetone: true, magsafe: true, usbc: true, cycles: true, action: true, camCtrl: true },
   // --- Samsung ---
-  { id: 'ss-s23', brand: 'samsung', name: 'Galaxy S23', year: 2023, usd: 799, oled: true },
-  { id: 'ss-s23u', brand: 'samsung', name: 'Galaxy S23 Ultra', year: 2023, usd: 1199, oled: true, spen: true },
-  { id: 'ss-s24', brand: 'samsung', name: 'Galaxy S24', year: 2024, usd: 799, oled: true },
-  { id: 'ss-s24p', brand: 'samsung', name: 'Galaxy S24+', year: 2024, usd: 999, oled: true },
-  { id: 'ss-s24u', brand: 'samsung', name: 'Galaxy S24 Ultra', year: 2024, usd: 1299, oled: true, spen: true },
-  { id: 'ss-s25', brand: 'samsung', name: 'Galaxy S25', year: 2025, usd: 799, oled: true },
-  { id: 'ss-s25p', brand: 'samsung', name: 'Galaxy S25+', year: 2025, usd: 999, oled: true },
-  { id: 'ss-s25u', brand: 'samsung', name: 'Galaxy S25 Ultra', year: 2025, usd: 1299, oled: true, spen: true },
-  { id: 'ss-a55', brand: 'samsung', name: 'Galaxy A55', year: 2024, oled: true },
-  { id: 'ss-a56', brand: 'samsung', name: 'Galaxy A56', year: 2025, oled: true },
+  { id: 'ss-s23', brand: 'samsung', sm: 'S911', name: 'Galaxy S23', year: 2023, usd: 799, oled: true },
+  { id: 'ss-s23u', brand: 'samsung', sm: 'S918', name: 'Galaxy S23 Ultra', year: 2023, usd: 1199, oled: true, spen: true },
+  { id: 'ss-s24', brand: 'samsung', sm: 'S921', name: 'Galaxy S24', year: 2024, usd: 799, oled: true },
+  { id: 'ss-s24p', brand: 'samsung', sm: 'S926', name: 'Galaxy S24+', year: 2024, usd: 999, oled: true },
+  { id: 'ss-s24u', brand: 'samsung', sm: 'S928', name: 'Galaxy S24 Ultra', year: 2024, usd: 1299, oled: true, spen: true },
+  { id: 'ss-s25', brand: 'samsung', sm: 'S931', name: 'Galaxy S25', year: 2025, usd: 799, oled: true },
+  { id: 'ss-s25p', brand: 'samsung', sm: 'S936', name: 'Galaxy S25+', year: 2025, usd: 999, oled: true },
+  { id: 'ss-s25u', brand: 'samsung', sm: 'S938', name: 'Galaxy S25 Ultra', year: 2025, usd: 1299, oled: true, spen: true },
+  { id: 'ss-a55', brand: 'samsung', sm: 'A556', name: 'Galaxy A55', year: 2024, oled: true },
+  { id: 'ss-a56', brand: 'samsung', sm: 'A566', name: 'Galaxy A56', year: 2025, oled: true },
   { id: 'ss-other', brand: 'samsung', name: 'Samsung khác', oled: true },
   // --- Google Pixel --- (tình trạng pin hiển thị từ Pixel 8a trở đi)
   { id: 'px-8', brand: 'pixel', name: 'Pixel 8', year: 2023, usd: 699, oled: true },
@@ -213,7 +213,7 @@ const PHONE = {
 
     // ---------- Pin và sạc ----------
     {
-      id: 'ph.battery', g: 'bat', w: 4,
+      id: 'ph.battery', g: 'bat', w: 4, tool: c => (c.brand === 'samsung' ? 'galaxybatt' : null),
       t: 'Tình trạng pin',
       path: c => c.brand === 'apple'
         ? (c.model && c.model.cycles ? 'Cài đặt › Pin › Tình trạng pin' : 'Cài đặt › Pin › Tình trạng pin và sạc')
@@ -221,7 +221,7 @@ const PHONE = {
           : c.brand === 'samsung' ? 'Samsung Members › Chẩn đoán › Pin' : '',
       how: c => c.brand === 'apple'
         ? 'Ghi Dung lượng tối đa.' + (c.model && c.model.cycles ? ' Máy này còn hiện Số chu kỳ, Ngày sản xuất, Ngày dùng đầu tiên: so với tuổi máy người bán kể. Apple thiết kế pin còn 80% sau 1.000 chu kỳ.' : ' Apple thiết kế pin đời này còn 80% sau 500 chu kỳ.') + ' Nếu ghi "Không thể xác minh pin Apple chính hãng" thì chọn mức pin không chính hãng.'
-        : c.brand === 'samsung' ? 'Samsung Members chỉ cho kết luận Bình thường / Yếu / Kém. Một số máy có thêm Cài đặt › Pin › Thông tin pin với phần trăm và số chu kỳ.'
+        : c.brand === 'samsung' ? 'Samsung Members chỉ cho kết luận Bình thường / Yếu / Kém, và nhiều bản phần mềm không hiện % pin trong Cài đặt. Muốn có con số: tạo nhật ký bằng *#9900# rồi dùng công cụ Đọc pin Galaxy bên dưới.'
           : c.brand === 'pixel' ? 'Trạng thái Bình thường / Giảm (dưới 80%). Số chu kỳ ở Cài đặt › Giới thiệu điện thoại › Thông tin pin.'
             : 'Nếu máy không hiện, ước lượng bằng ứng dụng như AccuBattery (cần dùng vài ngày) hoặc xem pin tụt nhanh khi quay video.',
       input: { key: 'battery', label: 'Dung lượng tối đa', unit: '%', min: 50, max: 100, auto: v => v >= 90 ? 'ok' : v >= 85 ? 'b85' : v >= 80 ? 'b80' : 'low' },
@@ -230,7 +230,7 @@ const PHONE = {
         { id: 'ok', label: '≥ 90%', f: 1 },
         { id: 'b85', label: '85–89%', f: 0.75 },
         { id: 'b80', label: '80–84%', f: 0.45, note: 'Pin sắp phải thay, trừ một phần tiền thay pin.' },
-        { id: 'low', label: '< 80% / cần bảo dưỡng', f: 0.1, note: 'Trừ đủ tiền thay pin (pin iPhone chính hãng ở Mỹ: 99–129 USD).' },
+        { id: 'low', label: '< 80% / cần bảo dưỡng', f: 0.1, note: 'Pin cần thay. Trừ đủ tiền thay pin (số tiền ước tính hiện ở cuối thẻ).' },
         { id: 'fake', label: 'Pin không chính hãng', f: 0.2, note: 'Số phần trăm không đáng tin, giá bán lại thấp hơn.' }
       ]
     },

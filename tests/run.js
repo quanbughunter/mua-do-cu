@@ -212,5 +212,42 @@ ok(!!notJpeg.error, 'Không phải JPEG → báo lỗi');
 const rep = A.reportText(g, S);
 ok(/PHIẾU KIỂM ĐỒ CŨ/.test(rep) && /Giá hợp lý/.test(rep), 'Báo cáo chữ');
 
-console.log('\n' + pass + ' đạt, ' + fail + ' lỗi');
-process.exit(fail ? 1 : 0);
+// ---------- Pin Galaxy từ nhật ký *#9900# ----------
+(async () => {
+  const note10 = 'x\n[ro.product.model]: [SM-N975F]\n[ro.build.PDA]: [N975FXXS9HWHA]\n' +
+    'HealthInfo{.batteryCycleCount = 0, .batteryFullCharge = 4300000, .batteryChargeCounter = 1489640}\n' +
+    'health: vendor.samsung.hardware.health@2.0::ISehHealth@Proxy | BatteryInfoBackUp |   mSavedBatteryAsoc: 73 |   mSavedBatteryMaxTemp: 571 |   mSavedBatteryMaxCurrent: 6896 |   mSavedBatteryUsage: 299304 |\n' +
+    'D BatteryService: !@[BatteryInfo] writeToFile /sys/class/power_supply/battery/battery_cycle: 2992\n' +
+    'D BatteryService: !@[BatteryInfo] writeToFile /sys/class/power_supply/battery/battery_cycle: 2993\n';
+  const scan = (text, size) => { const sc = A.galaxyBattScanner(); for (let i = 0; i < text.length; i += size) sc.push(text.slice(i, i + size)); return sc.result(); };
+  const g1 = scan(note10, 1 << 16);
+  ok(g1.health === 73 && g1.src === 'asoc' && g1.bsoh == null, 'Pin Galaxy: ASOC 73%', g1);
+  ok(g1.cycles === 2993 && g1.level === 'low', 'Pin Galaxy: 2.993 vòng, mức < 80%', [g1.cycles, g1.level]);
+  ok(g1.remainMah === 3140 && g1.designMah === 4300 && g1.maxTempC === 57.1, 'Pin Galaxy: còn ≈ 3.140/4.300 mAh, 57,1 °C', [g1.remainMah, g1.designMah, g1.maxTempC]);
+  ok(g1.model === 'SM-N975F' && g1.pda === 'N975FXXS9HWHA', 'Pin Galaxy: model và phần mềm', [g1.model, g1.pda]);
+  const g2 = scan(note10, 7);
+  ok(g2.health === 73 && g2.cycles === 2993 && g2.model === 'SM-N975F', 'Pin Galaxy: dòng bị cắt giữa hai đoạn vẫn đọc đúng', g2);
+  const g3 = scan('mSavedBatteryAsoc: 91\nmSavedBatteryBsoh: 88\n', 100);
+  ok(g3.health === 88 && g3.src === 'bsoh' && g3.level === 'b85', 'Pin Galaxy: có cả hai thì lấy BSOH', g3);
+  const g4 = scan('mSavedBatteryAsoc: 84\nmSavedBatteryUsage: 41250\n', 100);
+  ok(g4.cycles === 413 && g4.level === 'b80', 'Pin Galaxy: không có battery_cycle thì lấy Usage/100', g4);
+  const g5 = scan('chỉ có dòng rác\n', 100);
+  ok(g5.health == null && g5.level == null, 'Pin Galaxy: không có chỉ số thì không bịa', g5);
+  // Gói ZIP mẫu (tests/fixtures/galaxy-dumpstate.zip, tạo bằng make_fixtures.py)
+  const zlib = require('zlib');
+  const zb = fs.readFileSync(path.join(FX, 'galaxy-dumpstate.zip'));
+  const rd = (a, b) => Promise.resolve(new DataView(zb.buffer, zb.byteOffset + a, b - a));
+  const ent = await A.findZipEntry(zb.length, rd);
+  ok(ent && ent.name === 'dumpstate.txt' && ent.method === 8, 'ZIP: chọn dumpstate.txt lớn nhất, nén deflate', ent);
+  const st = await A.zipDataStart(rd, ent);
+  const txt = zlib.inflateRawSync(zb.subarray(st, st + ent.csize)).toString('utf8');
+  ok(txt.length === ent.usize, 'ZIP: giải nén đúng kích thước', [txt.length, ent.usize]);
+  const gz = scan(txt, 1 << 16);
+  ok(gz.health === 90 && gz.asoc === 91 && gz.cycles === 412 && gz.level === 'ok', 'ZIP mẫu: BSOH 90%, 412 vòng', gz);
+  ok(gz.remainMah === 4500 && gz.model === 'SM-S928B' && gz.maxTempC === 45.2, 'ZIP mẫu: 4.500/5.000 mAh, SM-S928B, 45,2 °C', gz);
+  let threw = false;
+  try { const junk = Buffer.from('không phải zip'); await A.findZipEntry(junk.length, (a, b) => Promise.resolve(new DataView(junk.buffer, junk.byteOffset + a, b - a))); } catch (e) { threw = true; }
+  ok(threw, 'Không phải ZIP → báo lỗi');
+  console.log('\n' + pass + ' đạt, ' + fail + ' lỗi');
+  process.exit(fail ? 1 : 0);
+})();

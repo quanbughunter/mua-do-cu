@@ -110,7 +110,29 @@ CASES = [
     ('fuji-xt5.jpg', 'FUJIFILM', 'X-T5', fuji('FF12345678 ABCDEF', 9876), None),
 ]
 
+# --- Nhật ký *#9900# của Samsung (tổng hợp, không chứa dữ liệu thật) ---
+def galaxy_dump(path):
+    """Gói dumpState giả: dumpstate.txt có các dòng pin như máy thật, chèn giữa nhiều dòng đệm
+    để bộ đọc phải giải nén theo luồng. Đáp án: BSOH 90, ASOC 91, 412 vòng, 45,2 °C, 5000 mAh."""
+    import zipfile
+    pad = ''.join('10-25 12:%02d:%02d.000  1000  963  963 D Filler: dong dem so %d de tep du lon\n' % (i // 60 % 60, i % 60, i) for i in range(10000))
+    txt = ('== dumpstate: 2026-10-25 12:00:00\n'
+           "Build fingerprint: 'samsung/e3qxxx/e3q:16/BP4A.251205.006/S928BXXS6DZI1:user/release-keys'\n"
+           '[ro.product.model]: [SM-S928B]\n[ro.build.PDA]: [S928BXXS6DZI1]\n' + pad +
+           '10-24 16:20:52.439  1000   963  1056 D BatteryService: !@[BatteryInfo] writeToFile /sys/class/power_supply/battery/battery_cycle: 410\n' + pad +
+           'health: vendor.samsung.hardware.health@2.0::ISehHealth@Proxy\nBatteryInfoBackUp\n'
+           '  mSavedBatteryAsoc: 91\n  mSavedBatteryBsoh: 90\n  mSavedBatteryMaxTemp: 452\n  mSavedBatteryMaxCurrent: 4300\n  mSavedBatteryUsage: 41250\n' + pad +
+           '10-25 02:05:43.112  1000   963  1056 D BatteryService: !@[BatteryInfo] writeToFile /sys/class/power_supply/battery/battery_cycle: 412\n'
+           'HealthInfo{.batteryLevel = 88, .batteryCycleCount = 0, .batteryFullCharge = 5000000, .batteryChargeCounter = 4400000}\n' + pad)
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.writestr('version.txt', '2.0')
+        z.writestr('FS/data/misc/recovery/ro.build.fingerprint', 'samsung/e3qxxx/e3q')
+        z.writestr('dumpstate_board.txt', 'board info\nmSavedBatteryAsoc: 12\n')
+        z.writestr('dumpstate.txt', txt)
+
 if __name__ == '__main__':
     for name, make, model, fn, bs in CASES:
         (OUT / name).write_bytes(jpeg(make, model, fn, bs))
         print('wrote', name)
+    galaxy_dump(OUT / 'galaxy-dumpstate.zip')
+    print('wrote galaxy-dumpstate.zip')

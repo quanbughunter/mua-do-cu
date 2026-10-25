@@ -305,3 +305,115 @@ function parseCameraJpeg(buf) {
   }
   return out;
 }
+
+// ===== Pin Galaxy từ nhật ký *#9900# (dumpstate) =====
+// Samsung không hiện % pin trên nhiều bản phần mềm, nhưng tệp dumpState_….zip có ghi:
+// BatteryInfoBackUp › mSavedBatteryAsoc / mSavedBatteryBsoh (độ khoẻ %), battery_cycle (vòng sạc cộng dồn),
+// batteryFullCharge (dung lượng thiết kế, µAh). Phần dưới đây không dùng DOM để kiểm thử được trong Node.
+
+// Tìm mục dumpstate*.txt lớn nhất trong tệp ZIP. read(start, end) → Promise<DataView>.
+async function findZipEntry(size, read, want) {
+  const re = want || /^dumpstate.*\.txt$/i;
+  const tailLen = Math.min(size, 65557);
+  const tail = await read(size - tailLen, size);
+  let eocd = -1;
+  for (let i = tail.byteLength - 22; i >= 0; i--) { if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; } }
+  if (eocd < 0) throw new Error('Tệp nén bị hỏng hoặc chưa chép xong. Chép lại tệp rồi thử lần nữa.');
+  let cdSize = tail.getUint32(eocd + 12, true), cdOff = tail.getUint32(eocd + 16, true);
+  if (cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF) {
+    const loc = eocd - 20;
+    if (loc >= 0 && tail.getUint32(loc, true) === 0x07064b50) {
+      const off = Number(tail.getBigUint64(loc + 8, true));
+      const z = await read(off, off + 56);
+      cdSize = Number(z.getBigUint64(40, true)); cdOff = Number(z.getBigUint64(48, true));
+    }
+  }
+  const cd = await read(cdOff, cdOff + cdSize);
+  let p = 0, best = null;
+  while (p + 46 <= cd.byteLength && cd.getUint32(p, true) === 0x02014b50) {
+    const method = cd.getUint16(p + 10, true);
+    let csize = cd.getUint32(p + 20, true), usize = cd.getUint32(p + 24, true), lho = cd.getUint32(p + 42, true);
+    const nlen = cd.getUint16(p + 28, true), xlen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
+    let name = '';
+    for (let k = 0; k < nlen; k++) name += String.fromCharCode(cd.getUint8(p + 46 + k));
+    let x = p + 46 + nlen;
+    const xend = x + xlen;
+    while (x + 4 <= xend) {
+      const id = cd.getUint16(x, true), sz = cd.getUint16(x + 2, true);
+      if (id === 1) {
+        let q = x + 4;
+        if (usize === 0xFFFFFFFF) { usize = Number(cd.getBigUint64(q, true)); q += 8; }
+        if (csize === 0xFFFFFFFF) { csize = Number(cd.getBigUint64(q, true)); q += 8; }
+        if (lho === 0xFFFFFFFF) { lho = Number(cd.getBigUint64(q, true)); q += 8; }
+      }
+      x += 4 + sz;
+    }
+    if (re.test(name.split('/').pop()) && (!best || usize > best.usize)) best = { name, method, csize, usize, lho };
+    p += 46 + nlen + xlen + clen;
+  }
+  return best;
+}
+// Vị trí bắt đầu dữ liệu nén của một mục (sau tiêu đề cục bộ).
+async function zipDataStart(read, e) {
+  const lh = await read(e.lho, e.lho + 30);
+  if (lh.getUint32(0, true) !== 0x04034b50) throw new Error('Không đọc được tệp nhật ký trong gói nén.');
+  return e.lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+}
+
+const GB_PATS = {
+  bsoh: /mSavedBatteryBsoh\s*[:=]\s*(\d{1,3})\b/,
+  asoc: /mSavedBatteryAsoc\s*[:=]\s*(\d{1,3})\b/,
+  usage: /mSavedBatteryUsage\s*[:=]\s*(\d+)/,
+  maxTemp: /mSavedBatteryMaxTemp\s*[:=]\s*(-?\d+)/,
+  model: /\[ro\.product\.model\]:\s*\[([^\]\s]+)\]/,
+  pda: /\[ro\.build\.PDA\]:\s*\[([^\]\s]+)\]/,
+  design: /batteryFullCharge(?:DesignCapacityUah)?\s*=\s*(\d{6,8})/
+};
+const GB_CYCLE = /(?:battery_cycle:\s*|BATTERY_CYCLE\()(\d{1,6})/g;
+
+// Dò từng đoạn chữ (đã giải nén). push() trả true khi đã đủ thông tin để dừng sớm.
+function galaxyBattScanner() {
+  const found = {}, lines = {};
+  let cycle = null, tail = '', after = -1;
+  const around = (buf, i, n) => buf.slice(Math.max(0, i - 120), Math.min(buf.length, i + n + 160)).replace(/\s+/g, ' ').trim();
+  return {
+    push(text) {
+      const buf = tail + text;
+      for (const k in GB_PATS) {
+        if (found[k] != null) continue;
+        const m = GB_PATS[k].exec(buf);
+        if (m) { found[k] = m[1]; lines[k] = around(buf, m.index, m[0].length); }
+      }
+      GB_CYCLE.lastIndex = 0;
+      let m;
+      while ((m = GB_CYCLE.exec(buf))) {
+        const v = +m[1];
+        if (cycle == null || v > cycle) { cycle = v; lines.cycle = around(buf, m.index, m[0].length); }
+      }
+      tail = buf.slice(-400);
+      const core = (found.bsoh != null || found.asoc != null) && (cycle != null || found.usage != null) && found.model != null;
+      if (!core) return false;
+      if (found.design != null) return true;
+      // Đủ thông tin chính nhưng chưa thấy dung lượng thiết kế: đọc thêm khoảng 30 triệu ký tự rồi dừng.
+      if (after < 0) after = 0;
+      after += text.length;
+      return after > 3e7;
+    },
+    result() { return galaxyBattSummary(found, cycle, lines); }
+  };
+}
+function galaxyBattSummary(f, cycle, lines) {
+  const n = k => (f[k] != null ? +f[k] : null);
+  const bsoh = n('bsoh'), asoc = n('asoc');
+  const health = bsoh != null ? bsoh : asoc;
+  const design = f.design != null ? Math.round(+f.design / 1000) : null;
+  return {
+    health, src: bsoh != null ? 'bsoh' : asoc != null ? 'asoc' : null, bsoh, asoc,
+    cycles: cycle != null ? cycle : f.usage != null ? Math.round(+f.usage / 100) : null,
+    maxTempC: f.maxTemp != null ? +f.maxTemp / 10 : null,
+    designMah: design, remainMah: design && health != null ? Math.round(design * health / 1000) * 10 : null,
+    model: f.model || null, pda: f.pda || null,
+    level: health == null ? null : health >= 90 ? 'ok' : health >= 85 ? 'b85' : health >= 80 ? 'b80' : 'low',
+    lines: lines || {}
+  };
+}

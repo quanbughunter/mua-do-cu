@@ -5,7 +5,8 @@ const TOOL_NAMES = {
   screen: 'Thử màn hình', touch: 'Thử cảm ứng', speaker: 'Thử loa', audio: 'Thử âm thanh trái, phải', mic: 'Thử micro',
   noise: 'Tiếng ồn để thử chống ồn', sensors: 'Cảm biến và rung', camera: 'Xem từng camera', battery: 'Trạng thái sạc',
   drain: 'Tính độ chai pin tai nghe', airpods: 'Đối chiếu số model AirPods', exif: 'Đọc ảnh máy ảnh', dust: 'Tìm bụi cảm biến',
-  hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Giải mã số máy', imei: 'Kiểm tra IMEI'
+  hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Giải mã số máy', imei: 'Kiểm tra IMEI',
+  galaxybatt: 'Đọc pin Galaxy từ *#9900#'
 };
 
 const live = { stream: null, ctx: null, nodes: [], timers: [], rec: null, listeners: [] };
@@ -277,6 +278,94 @@ TOOLS.battery = (el, api) => {
     up(); listen(b, 'chargingchange', up); listen(b, 'levelchange', up);
   }).catch(err => { st.textContent = blockedMsg(err, 'thông tin pin'); });
   bindPicker(el, api);
+};
+
+// ---------- Pin Galaxy từ nhật ký *#9900# ----------
+TOOLS.galaxybatt = (el, api) => {
+  el.innerHTML = '<p class="how">Nhiều máy Samsung không hiện % pin trong Cài đặt, nhưng tệp nhật ký <b>*#9900#</b> có ghi độ khoẻ pin và số vòng sạc. Tệp được đọc ngay trên máy này, không tải lên đâu cả.</p>' +
+    '<ol class="list-plain">' +
+    '<li>Nhờ người bán đăng xuất tài khoản rồi khôi phục cài đặt gốc trước. Chỉ số pin thường vẫn còn sau khi khôi phục.</li>' +
+    '<li>Tắt Trình chặn tự động (Auto Blocker) trong Cài đặt › Bảo mật và quyền riêng tư, nếu máy có.</li>' +
+    '<li>Bấm <b>*#9900#</b>, chọn <b>Run dumpstate/logcat</b>, đợi 1–3 phút đến khi hiện Dump Result, bấm OK.</li>' +
+    '<li>Chọn <b>Copy to sdcard</b>. Tệp dumpState_….zip nằm ở My Files › Bộ nhớ trong › log. Nếu app này mở trên điện thoại khác, gửi tệp sang bằng Quick Share.</li></ol>' +
+    '<div class="field"><label for="g-f">Chọn tệp dumpState_….zip (hoặc dumpstate.txt đã giải nén)</label><input class="inp" type="file" id="g-f"></div>' +
+    '<div class="bar" aria-hidden="true"><i id="g-bar" style="width:0"></i></div><p class="hint" id="g-st">Thường đọc xong trong vài giây.</p><div id="g-out" class="stack"></div>' + levelPicker(api);
+  bindPicker(el, api);
+  const st = el.querySelector('#g-st'), bar = el.querySelector('#g-bar'), out = el.querySelector('#g-out');
+  const reader = f => async (a, b) => new DataView(await f.slice(a, b).arrayBuffer());
+  const show = r => {
+    const pct = v => (v != null ? v + '%' : 'không có');
+    let h = '';
+    if (r.health == null) {
+      h += '<div class="note tone-warn">Nhật ký của máy này không ghi chỉ số độ khoẻ pin (mSavedBatteryAsoc/Bsoh). Dùng Samsung Members › Chẩn đoán › Pin để xem kết luận Bình thường / Yếu.</div>';
+    } else {
+      const lv = api.item && api.item.levels.find(l => l.id === r.level);
+      h += '<div class="gb-head"><span class="bignum">' + r.health + '<small>%</small></span>' +
+        (lv ? '<span class="lv ' + lvTone(lv) + '" aria-pressed="true">' + esc(lv.label) + '</span>' : '') + '</div>';
+      const adv = { ok: ['pass', 'Pin còn khoẻ. App không trừ tiền pin.'], b85: ['warn', 'Mức thường gặp ở máy dùng 1,5–2,5 năm. App trừ khoảng 1/4 chi phí thay pin.'], b80: ['warn', 'Đã chai rõ. App trừ khoảng 60% chi phí thay pin.'], low: ['stop', 'Dưới 80%, nên thay pin. App trừ đủ chi phí thay pin.'] }[r.level];
+      if (adv) h += '<div class="note tone-' + adv[0] + '">' + adv[1] + '</div>';
+    }
+    const m = api.ctx.model;
+    if (m && m.sm && r.model && r.model.toUpperCase().indexOf('SM-' + m.sm) !== 0) h += '<div class="note tone-stop"><b>Nhật ký là của ' + esc(r.model) + '</b>, nhưng phiếu đang ghi ' + esc(m.name) + ' (SM-' + esc(m.sm) + '…). Tệp có thể không lấy từ máy đang bán: tự tạo lại nhật ký trên chính máy đó.</div>';
+    h += '<dl class="kv"><dt>Máy trong nhật ký</dt><dd>' + esc([r.model, r.pda].filter(Boolean).join(' · ') || 'không rõ') + '</dd>' +
+      '<dt>Độ khoẻ (BSOH)</dt><dd>' + pct(r.bsoh) + '</dd><dt>Độ khoẻ (ASOC)</dt><dd>' + pct(r.asoc) + '</dd>' +
+      '<dt>Vòng sạc cộng dồn</dt><dd>' + (r.cycles != null ? r.cycles.toLocaleString('vi-VN') : 'không có') + '</dd>' +
+      (r.remainMah ? '<dt>Dung lượng còn lại</dt><dd>≈ ' + r.remainMah.toLocaleString('vi-VN') + ' / ' + r.designMah.toLocaleString('vi-VN') + ' mAh</dd>' : '') +
+      (r.maxTempC != null ? '<dt>Nhiệt độ pin cao nhất</dt><dd>' + r.maxTempC.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' °C</dd>' : '') + '</dl>' +
+      '<p class="hint">Nếu có cả hai chỉ số, app lấy BSOH. Vòng sạc là tổng % đã xả chia 100, tính từ khi xuất xưởng; pin thay ở tiệm ngoài có thể không đặt lại bộ đếm này.</p>';
+    const raw = ['bsoh', 'asoc', 'cycle', 'model'].map(k => r.lines[k]).filter(Boolean);
+    if (raw.length) h += '<details><summary class="small muted">Dòng gốc trong nhật ký</summary><pre class="gb-raw mono small">' + esc([...new Set(raw)].join('\n\n')) + '</pre></details>';
+    if (api.item && (r.health != null || r.cycles != null)) h += '<div class="btnrow"><button class="btn primary" id="g-s">Ghi vào phiếu</button></div>';
+    out.innerHTML = h;
+    el.querySelectorAll('[data-pick]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === r.level)));
+    const save = out.querySelector('#g-s');
+    if (save) save.onclick = () => {
+      api.patch(i => {
+        if (r.health != null) { i.inputs.battery = r.health; i.answers[api.item.id] = r.level; delete i.na[api.item.id]; }
+        if (r.cycles != null) i.inputs.cycles = r.cycles;
+        i.tools.galaxybatt = { health: r.health, src: r.src, cycles: r.cycles, model: r.model };
+      });
+      api.toast('Đã ghi pin vào phiếu'); api.close();
+    };
+  };
+  el.querySelector('#g-f').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    out.innerHTML = ''; bar.style.width = '0'; st.textContent = 'Đang mở ' + f.name + '…';
+    const t0 = Date.now();
+    try {
+      let stream, total;
+      const head = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      if (head[0] === 0x50 && head[1] === 0x4b && head[2] === 3 && head[3] === 4) {
+        const ent = await findZipEntry(f.size, reader(f));
+        if (!ent) throw new Error('Trong gói nén không có tệp dumpstate…txt. Hãy chọn tệp dumpState_….zip trong thư mục log.');
+        const start = await zipDataStart(reader(f), ent);
+        stream = f.slice(start, start + ent.csize).stream();
+        if (ent.method === 8) {
+          if (typeof DecompressionStream === 'undefined') throw new Error('Trình duyệt này chưa giải nén được. Cập nhật Chrome hoặc Samsung Internet rồi thử lại.');
+          stream = stream.pipeThrough(new DecompressionStream('deflate-raw'));
+        } else if (ent.method !== 0) throw new Error('Gói nén dùng kiểu nén lạ. Giải nén tay rồi chọn tệp dumpstate.txt.');
+        total = ent.usize || f.size * 5;
+      } else { stream = f.stream(); total = f.size; }
+      const rd = stream.pipeThrough(new TextDecoderStream()).getReader();
+      const sc = galaxyBattScanner();
+      let got = 0, paint = 0;
+      for (;;) {
+        const { value, done } = await rd.read();
+        if (done) break;
+        got += value.length;
+        if (sc.push(value)) { rd.cancel().catch(() => {}); break; }
+        if (Date.now() - paint > 120) { paint = Date.now(); bar.style.width = Math.min(100, got / total * 100) + '%'; st.textContent = 'Đang đọc… ' + Math.round(got / 1e6) + ' MB'; }
+      }
+      bar.style.width = '100%';
+      const secs = (Date.now() - t0) / 1000;
+      st.textContent = secs < 1 ? 'Xong trong chưa tới 1 giây.' : 'Xong trong ' + secs.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' giây.';
+      show(sc.result());
+    } catch (err) {
+      bar.style.width = '0'; st.textContent = '';
+      out.innerHTML = '<div class="note tone-warn">' + esc(err && err.message ? err.message : 'Không đọc được tệp này.') + '</div>';
+    }
+    e.target.value = '';
+  };
 };
 
 // ---------- Độ chai pin tai nghe ----------

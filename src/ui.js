@@ -188,8 +188,9 @@ function itemCard(insp, r, c, totalEw, v) {
     '<button class="lv t-' + toneOfLevel(l) + '" data-act="level" data-id="' + it.id + '" data-lv="' + l.id + '" aria-pressed="' + (lvl && lvl.id === l.id) + '">' + esc(l.label) + '</button>').join('') + '</div>';
   if (lvl && lvl.note) h += '<div class="note lvnote tone-' + toneOfLevel(lvl) + '">' + esc(lvl.note) + '</div>';
   const foot = [];
-  if (it.tool && TOOLS[it.tool]) foot.push('<button class="toolbtn" data-act="tool" data-tool="' + it.tool + '" data-item="' + it.id + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[it.tool]) + '</button>');
-  else if (it.tool === 'partno' || it.tool === 'imei') foot.push('<button class="toolbtn" data-act="goinfo" data-focus="f-' + it.tool + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[it.tool]) + '</button>');
+  const tl = typeof it.tool === 'function' ? it.tool(c) : it.tool;
+  if (tl && TOOLS[tl]) foot.push('<button class="toolbtn" data-act="tool" data-tool="' + tl + '" data-item="' + it.id + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[tl]) + '</button>');
+  else if (tl === 'partno' || tl === 'imei') foot.push('<button class="toolbtn" data-act="goinfo" data-focus="f-' + tl + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[tl]) + '</button>');
   const cost = v && costHint(insp, it, r, c, v);
   if (cost) foot.push('<span class="small muted">' + cost + '</span>');
   if (lvl) foot.push('<button class="linkbtn muted" data-act="clear" data-id="' + it.id + '">Bỏ chọn</button>');

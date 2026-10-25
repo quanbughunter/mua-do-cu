@@ -324,6 +324,8 @@ textarea.inp { resize: vertical; min-height: 92px; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+.gb-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.gb-raw { white-space: pre-wrap; word-break: break-all; margin: 6px 0 0; background: var(--sunk); border-radius: 8px; padding: 8px 10px; }
 
 </style>
 </head>
@@ -350,7 +352,7 @@ textarea.inp { resize: vertical; min-height: 92px; }
 <script>
 (function () {
 'use strict';
-const APP_VERSION = '0.1.0';
+const APP_VERSION = '0.2.0';
 const IS_PWA = true;
 // ===== Dữ liệu dùng chung: mức chấm, hạng, đường cong giá, khấu hao, tiền tệ =====
 // Mỗi mục kiểm tra có danh sách "mức" (levels). f = hệ số điểm (1 = đủ điểm, 0 = mất hết điểm của mục).
@@ -499,16 +501,16 @@ const PHONE_MODELS = [
   { id: 'ip-18p', brand: 'apple', name: 'iPhone 18 Pro', year: 2026, faceId: true, oled: true, parts: 'full', truetone: true, magsafe: true, usbc: true, cycles: true, action: true, camCtrl: true },
   { id: 'ip-18pm', brand: 'apple', name: 'iPhone 18 Pro Max', year: 2026, faceId: true, oled: true, parts: 'full', truetone: true, magsafe: true, usbc: true, cycles: true, action: true, camCtrl: true },
   // --- Samsung ---
-  { id: 'ss-s23', brand: 'samsung', name: 'Galaxy S23', year: 2023, usd: 799, oled: true },
-  { id: 'ss-s23u', brand: 'samsung', name: 'Galaxy S23 Ultra', year: 2023, usd: 1199, oled: true, spen: true },
-  { id: 'ss-s24', brand: 'samsung', name: 'Galaxy S24', year: 2024, usd: 799, oled: true },
-  { id: 'ss-s24p', brand: 'samsung', name: 'Galaxy S24+', year: 2024, usd: 999, oled: true },
-  { id: 'ss-s24u', brand: 'samsung', name: 'Galaxy S24 Ultra', year: 2024, usd: 1299, oled: true, spen: true },
-  { id: 'ss-s25', brand: 'samsung', name: 'Galaxy S25', year: 2025, usd: 799, oled: true },
-  { id: 'ss-s25p', brand: 'samsung', name: 'Galaxy S25+', year: 2025, usd: 999, oled: true },
-  { id: 'ss-s25u', brand: 'samsung', name: 'Galaxy S25 Ultra', year: 2025, usd: 1299, oled: true, spen: true },
-  { id: 'ss-a55', brand: 'samsung', name: 'Galaxy A55', year: 2024, oled: true },
-  { id: 'ss-a56', brand: 'samsung', name: 'Galaxy A56', year: 2025, oled: true },
+  { id: 'ss-s23', brand: 'samsung', sm: 'S911', name: 'Galaxy S23', year: 2023, usd: 799, oled: true },
+  { id: 'ss-s23u', brand: 'samsung', sm: 'S918', name: 'Galaxy S23 Ultra', year: 2023, usd: 1199, oled: true, spen: true },
+  { id: 'ss-s24', brand: 'samsung', sm: 'S921', name: 'Galaxy S24', year: 2024, usd: 799, oled: true },
+  { id: 'ss-s24p', brand: 'samsung', sm: 'S926', name: 'Galaxy S24+', year: 2024, usd: 999, oled: true },
+  { id: 'ss-s24u', brand: 'samsung', sm: 'S928', name: 'Galaxy S24 Ultra', year: 2024, usd: 1299, oled: true, spen: true },
+  { id: 'ss-s25', brand: 'samsung', sm: 'S931', name: 'Galaxy S25', year: 2025, usd: 799, oled: true },
+  { id: 'ss-s25p', brand: 'samsung', sm: 'S936', name: 'Galaxy S25+', year: 2025, usd: 999, oled: true },
+  { id: 'ss-s25u', brand: 'samsung', sm: 'S938', name: 'Galaxy S25 Ultra', year: 2025, usd: 1299, oled: true, spen: true },
+  { id: 'ss-a55', brand: 'samsung', sm: 'A556', name: 'Galaxy A55', year: 2024, oled: true },
+  { id: 'ss-a56', brand: 'samsung', sm: 'A566', name: 'Galaxy A56', year: 2025, oled: true },
   { id: 'ss-other', brand: 'samsung', name: 'Samsung khác', oled: true },
   // --- Google Pixel --- (tình trạng pin hiển thị từ Pixel 8a trở đi)
   { id: 'px-8', brand: 'pixel', name: 'Pixel 8', year: 2023, usd: 699, oled: true },
@@ -673,7 +675,7 @@ const PHONE = {
 
     // ---------- Pin và sạc ----------
     {
-      id: 'ph.battery', g: 'bat', w: 4,
+      id: 'ph.battery', g: 'bat', w: 4, tool: c => (c.brand === 'samsung' ? 'galaxybatt' : null),
       t: 'Tình trạng pin',
       path: c => c.brand === 'apple'
         ? (c.model && c.model.cycles ? 'Cài đặt › Pin › Tình trạng pin' : 'Cài đặt › Pin › Tình trạng pin và sạc')
@@ -681,7 +683,7 @@ const PHONE = {
           : c.brand === 'samsung' ? 'Samsung Members › Chẩn đoán › Pin' : '',
       how: c => c.brand === 'apple'
         ? 'Ghi Dung lượng tối đa.' + (c.model && c.model.cycles ? ' Máy này còn hiện Số chu kỳ, Ngày sản xuất, Ngày dùng đầu tiên: so với tuổi máy người bán kể. Apple thiết kế pin còn 80% sau 1.000 chu kỳ.' : ' Apple thiết kế pin đời này còn 80% sau 500 chu kỳ.') + ' Nếu ghi "Không thể xác minh pin Apple chính hãng" thì chọn mức pin không chính hãng.'
-        : c.brand === 'samsung' ? 'Samsung Members chỉ cho kết luận Bình thường / Yếu / Kém. Một số máy có thêm Cài đặt › Pin › Thông tin pin với phần trăm và số chu kỳ.'
+        : c.brand === 'samsung' ? 'Samsung Members chỉ cho kết luận Bình thường / Yếu / Kém, và nhiều bản phần mềm không hiện % pin trong Cài đặt. Muốn có con số: tạo nhật ký bằng *#9900# rồi dùng công cụ Đọc pin Galaxy bên dưới.'
           : c.brand === 'pixel' ? 'Trạng thái Bình thường / Giảm (dưới 80%). Số chu kỳ ở Cài đặt › Giới thiệu điện thoại › Thông tin pin.'
             : 'Nếu máy không hiện, ước lượng bằng ứng dụng như AccuBattery (cần dùng vài ngày) hoặc xem pin tụt nhanh khi quay video.',
       input: { key: 'battery', label: 'Dung lượng tối đa', unit: '%', min: 50, max: 100, auto: v => v >= 90 ? 'ok' : v >= 85 ? 'b85' : v >= 80 ? 'b80' : 'low' },
@@ -690,7 +692,7 @@ const PHONE = {
         { id: 'ok', label: '≥ 90%', f: 1 },
         { id: 'b85', label: '85–89%', f: 0.75 },
         { id: 'b80', label: '80–84%', f: 0.45, note: 'Pin sắp phải thay, trừ một phần tiền thay pin.' },
-        { id: 'low', label: '< 80% / cần bảo dưỡng', f: 0.1, note: 'Trừ đủ tiền thay pin (pin iPhone chính hãng ở Mỹ: 99–129 USD).' },
+        { id: 'low', label: '< 80% / cần bảo dưỡng', f: 0.1, note: 'Pin cần thay. Trừ đủ tiền thay pin (số tiền ước tính hiện ở cuối thẻ).' },
         { id: 'fake', label: 'Pin không chính hãng', f: 0.2, note: 'Số phần trăm không đáng tin, giá bán lại thấp hơn.' }
       ]
     },
@@ -1881,6 +1883,118 @@ function parseCameraJpeg(buf) {
   return out;
 }
 
+// ===== Pin Galaxy từ nhật ký *#9900# (dumpstate) =====
+// Samsung không hiện % pin trên nhiều bản phần mềm, nhưng tệp dumpState_….zip có ghi:
+// BatteryInfoBackUp › mSavedBatteryAsoc / mSavedBatteryBsoh (độ khoẻ %), battery_cycle (vòng sạc cộng dồn),
+// batteryFullCharge (dung lượng thiết kế, µAh). Phần dưới đây không dùng DOM để kiểm thử được trong Node.
+
+// Tìm mục dumpstate*.txt lớn nhất trong tệp ZIP. read(start, end) → Promise<DataView>.
+async function findZipEntry(size, read, want) {
+  const re = want || /^dumpstate.*\.txt$/i;
+  const tailLen = Math.min(size, 65557);
+  const tail = await read(size - tailLen, size);
+  let eocd = -1;
+  for (let i = tail.byteLength - 22; i >= 0; i--) { if (tail.getUint32(i, true) === 0x06054b50) { eocd = i; break; } }
+  if (eocd < 0) throw new Error('Tệp nén bị hỏng hoặc chưa chép xong. Chép lại tệp rồi thử lần nữa.');
+  let cdSize = tail.getUint32(eocd + 12, true), cdOff = tail.getUint32(eocd + 16, true);
+  if (cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF) {
+    const loc = eocd - 20;
+    if (loc >= 0 && tail.getUint32(loc, true) === 0x07064b50) {
+      const off = Number(tail.getBigUint64(loc + 8, true));
+      const z = await read(off, off + 56);
+      cdSize = Number(z.getBigUint64(40, true)); cdOff = Number(z.getBigUint64(48, true));
+    }
+  }
+  const cd = await read(cdOff, cdOff + cdSize);
+  let p = 0, best = null;
+  while (p + 46 <= cd.byteLength && cd.getUint32(p, true) === 0x02014b50) {
+    const method = cd.getUint16(p + 10, true);
+    let csize = cd.getUint32(p + 20, true), usize = cd.getUint32(p + 24, true), lho = cd.getUint32(p + 42, true);
+    const nlen = cd.getUint16(p + 28, true), xlen = cd.getUint16(p + 30, true), clen = cd.getUint16(p + 32, true);
+    let name = '';
+    for (let k = 0; k < nlen; k++) name += String.fromCharCode(cd.getUint8(p + 46 + k));
+    let x = p + 46 + nlen;
+    const xend = x + xlen;
+    while (x + 4 <= xend) {
+      const id = cd.getUint16(x, true), sz = cd.getUint16(x + 2, true);
+      if (id === 1) {
+        let q = x + 4;
+        if (usize === 0xFFFFFFFF) { usize = Number(cd.getBigUint64(q, true)); q += 8; }
+        if (csize === 0xFFFFFFFF) { csize = Number(cd.getBigUint64(q, true)); q += 8; }
+        if (lho === 0xFFFFFFFF) { lho = Number(cd.getBigUint64(q, true)); q += 8; }
+      }
+      x += 4 + sz;
+    }
+    if (re.test(name.split('/').pop()) && (!best || usize > best.usize)) best = { name, method, csize, usize, lho };
+    p += 46 + nlen + xlen + clen;
+  }
+  return best;
+}
+// Vị trí bắt đầu dữ liệu nén của một mục (sau tiêu đề cục bộ).
+async function zipDataStart(read, e) {
+  const lh = await read(e.lho, e.lho + 30);
+  if (lh.getUint32(0, true) !== 0x04034b50) throw new Error('Không đọc được tệp nhật ký trong gói nén.');
+  return e.lho + 30 + lh.getUint16(26, true) + lh.getUint16(28, true);
+}
+
+const GB_PATS = {
+  bsoh: /mSavedBatteryBsoh\s*[:=]\s*(\d{1,3})\b/,
+  asoc: /mSavedBatteryAsoc\s*[:=]\s*(\d{1,3})\b/,
+  usage: /mSavedBatteryUsage\s*[:=]\s*(\d+)/,
+  maxTemp: /mSavedBatteryMaxTemp\s*[:=]\s*(-?\d+)/,
+  model: /\[ro\.product\.model\]:\s*\[([^\]\s]+)\]/,
+  pda: /\[ro\.build\.PDA\]:\s*\[([^\]\s]+)\]/,
+  design: /batteryFullCharge(?:DesignCapacityUah)?\s*=\s*(\d{6,8})/
+};
+const GB_CYCLE = /(?:battery_cycle:\s*|BATTERY_CYCLE\()(\d{1,6})/g;
+
+// Dò từng đoạn chữ (đã giải nén). push() trả true khi đã đủ thông tin để dừng sớm.
+function galaxyBattScanner() {
+  const found = {}, lines = {};
+  let cycle = null, tail = '', after = -1;
+  const around = (buf, i, n) => buf.slice(Math.max(0, i - 120), Math.min(buf.length, i + n + 160)).replace(/\s+/g, ' ').trim();
+  return {
+    push(text) {
+      const buf = tail + text;
+      for (const k in GB_PATS) {
+        if (found[k] != null) continue;
+        const m = GB_PATS[k].exec(buf);
+        if (m) { found[k] = m[1]; lines[k] = around(buf, m.index, m[0].length); }
+      }
+      GB_CYCLE.lastIndex = 0;
+      let m;
+      while ((m = GB_CYCLE.exec(buf))) {
+        const v = +m[1];
+        if (cycle == null || v > cycle) { cycle = v; lines.cycle = around(buf, m.index, m[0].length); }
+      }
+      tail = buf.slice(-400);
+      const core = (found.bsoh != null || found.asoc != null) && (cycle != null || found.usage != null) && found.model != null;
+      if (!core) return false;
+      if (found.design != null) return true;
+      // Đủ thông tin chính nhưng chưa thấy dung lượng thiết kế: đọc thêm khoảng 30 triệu ký tự rồi dừng.
+      if (after < 0) after = 0;
+      after += text.length;
+      return after > 3e7;
+    },
+    result() { return galaxyBattSummary(found, cycle, lines); }
+  };
+}
+function galaxyBattSummary(f, cycle, lines) {
+  const n = k => (f[k] != null ? +f[k] : null);
+  const bsoh = n('bsoh'), asoc = n('asoc');
+  const health = bsoh != null ? bsoh : asoc;
+  const design = f.design != null ? Math.round(+f.design / 1000) : null;
+  return {
+    health, src: bsoh != null ? 'bsoh' : asoc != null ? 'asoc' : null, bsoh, asoc,
+    cycles: cycle != null ? cycle : f.usage != null ? Math.round(+f.usage / 100) : null,
+    maxTempC: f.maxTemp != null ? +f.maxTemp / 10 : null,
+    designMah: design, remainMah: design && health != null ? Math.round(design * health / 1000) * 10 : null,
+    model: f.model || null, pda: f.pda || null,
+    level: health == null ? null : health >= 90 ? 'ok' : health >= 85 ? 'b85' : health >= 80 ? 'b80' : 'low',
+    lines: lines || {}
+  };
+}
+
 // ===== Lõi tính toán: ngữ cảnh, chấm điểm, định giá, kết luận =====
 // Không đụng tới DOM, chạy được trong Node để kiểm thử.
 
@@ -2278,7 +2392,8 @@ const TOOL_NAMES = {
   screen: 'Thử màn hình', touch: 'Thử cảm ứng', speaker: 'Thử loa', audio: 'Thử âm thanh trái, phải', mic: 'Thử micro',
   noise: 'Tiếng ồn để thử chống ồn', sensors: 'Cảm biến và rung', camera: 'Xem từng camera', battery: 'Trạng thái sạc',
   drain: 'Tính độ chai pin tai nghe', airpods: 'Đối chiếu số model AirPods', exif: 'Đọc ảnh máy ảnh', dust: 'Tìm bụi cảm biến',
-  hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Giải mã số máy', imei: 'Kiểm tra IMEI'
+  hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Giải mã số máy', imei: 'Kiểm tra IMEI',
+  galaxybatt: 'Đọc pin Galaxy từ *#9900#'
 };
 
 const live = { stream: null, ctx: null, nodes: [], timers: [], rec: null, listeners: [] };
@@ -2550,6 +2665,94 @@ TOOLS.battery = (el, api) => {
     up(); listen(b, 'chargingchange', up); listen(b, 'levelchange', up);
   }).catch(err => { st.textContent = blockedMsg(err, 'thông tin pin'); });
   bindPicker(el, api);
+};
+
+// ---------- Pin Galaxy từ nhật ký *#9900# ----------
+TOOLS.galaxybatt = (el, api) => {
+  el.innerHTML = '<p class="how">Nhiều máy Samsung không hiện % pin trong Cài đặt, nhưng tệp nhật ký <b>*#9900#</b> có ghi độ khoẻ pin và số vòng sạc. Tệp được đọc ngay trên máy này, không tải lên đâu cả.</p>' +
+    '<ol class="list-plain">' +
+    '<li>Nhờ người bán đăng xuất tài khoản rồi khôi phục cài đặt gốc trước. Chỉ số pin thường vẫn còn sau khi khôi phục.</li>' +
+    '<li>Tắt Trình chặn tự động (Auto Blocker) trong Cài đặt › Bảo mật và quyền riêng tư, nếu máy có.</li>' +
+    '<li>Bấm <b>*#9900#</b>, chọn <b>Run dumpstate/logcat</b>, đợi 1–3 phút đến khi hiện Dump Result, bấm OK.</li>' +
+    '<li>Chọn <b>Copy to sdcard</b>. Tệp dumpState_….zip nằm ở My Files › Bộ nhớ trong › log. Nếu app này mở trên điện thoại khác, gửi tệp sang bằng Quick Share.</li></ol>' +
+    '<div class="field"><label for="g-f">Chọn tệp dumpState_….zip (hoặc dumpstate.txt đã giải nén)</label><input class="inp" type="file" id="g-f"></div>' +
+    '<div class="bar" aria-hidden="true"><i id="g-bar" style="width:0"></i></div><p class="hint" id="g-st">Thường đọc xong trong vài giây.</p><div id="g-out" class="stack"></div>' + levelPicker(api);
+  bindPicker(el, api);
+  const st = el.querySelector('#g-st'), bar = el.querySelector('#g-bar'), out = el.querySelector('#g-out');
+  const reader = f => async (a, b) => new DataView(await f.slice(a, b).arrayBuffer());
+  const show = r => {
+    const pct = v => (v != null ? v + '%' : 'không có');
+    let h = '';
+    if (r.health == null) {
+      h += '<div class="note tone-warn">Nhật ký của máy này không ghi chỉ số độ khoẻ pin (mSavedBatteryAsoc/Bsoh). Dùng Samsung Members › Chẩn đoán › Pin để xem kết luận Bình thường / Yếu.</div>';
+    } else {
+      const lv = api.item && api.item.levels.find(l => l.id === r.level);
+      h += '<div class="gb-head"><span class="bignum">' + r.health + '<small>%</small></span>' +
+        (lv ? '<span class="lv ' + lvTone(lv) + '" aria-pressed="true">' + esc(lv.label) + '</span>' : '') + '</div>';
+      const adv = { ok: ['pass', 'Pin còn khoẻ. App không trừ tiền pin.'], b85: ['warn', 'Mức thường gặp ở máy dùng 1,5–2,5 năm. App trừ khoảng 1/4 chi phí thay pin.'], b80: ['warn', 'Đã chai rõ. App trừ khoảng 60% chi phí thay pin.'], low: ['stop', 'Dưới 80%, nên thay pin. App trừ đủ chi phí thay pin.'] }[r.level];
+      if (adv) h += '<div class="note tone-' + adv[0] + '">' + adv[1] + '</div>';
+    }
+    const m = api.ctx.model;
+    if (m && m.sm && r.model && r.model.toUpperCase().indexOf('SM-' + m.sm) !== 0) h += '<div class="note tone-stop"><b>Nhật ký là của ' + esc(r.model) + '</b>, nhưng phiếu đang ghi ' + esc(m.name) + ' (SM-' + esc(m.sm) + '…). Tệp có thể không lấy từ máy đang bán: tự tạo lại nhật ký trên chính máy đó.</div>';
+    h += '<dl class="kv"><dt>Máy trong nhật ký</dt><dd>' + esc([r.model, r.pda].filter(Boolean).join(' · ') || 'không rõ') + '</dd>' +
+      '<dt>Độ khoẻ (BSOH)</dt><dd>' + pct(r.bsoh) + '</dd><dt>Độ khoẻ (ASOC)</dt><dd>' + pct(r.asoc) + '</dd>' +
+      '<dt>Vòng sạc cộng dồn</dt><dd>' + (r.cycles != null ? r.cycles.toLocaleString('vi-VN') : 'không có') + '</dd>' +
+      (r.remainMah ? '<dt>Dung lượng còn lại</dt><dd>≈ ' + r.remainMah.toLocaleString('vi-VN') + ' / ' + r.designMah.toLocaleString('vi-VN') + ' mAh</dd>' : '') +
+      (r.maxTempC != null ? '<dt>Nhiệt độ pin cao nhất</dt><dd>' + r.maxTempC.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' °C</dd>' : '') + '</dl>' +
+      '<p class="hint">Nếu có cả hai chỉ số, app lấy BSOH. Vòng sạc là tổng % đã xả chia 100, tính từ khi xuất xưởng; pin thay ở tiệm ngoài có thể không đặt lại bộ đếm này.</p>';
+    const raw = ['bsoh', 'asoc', 'cycle', 'model'].map(k => r.lines[k]).filter(Boolean);
+    if (raw.length) h += '<details><summary class="small muted">Dòng gốc trong nhật ký</summary><pre class="gb-raw mono small">' + esc([...new Set(raw)].join('\n\n')) + '</pre></details>';
+    if (api.item && (r.health != null || r.cycles != null)) h += '<div class="btnrow"><button class="btn primary" id="g-s">Ghi vào phiếu</button></div>';
+    out.innerHTML = h;
+    el.querySelectorAll('[data-pick]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === r.level)));
+    const save = out.querySelector('#g-s');
+    if (save) save.onclick = () => {
+      api.patch(i => {
+        if (r.health != null) { i.inputs.battery = r.health; i.answers[api.item.id] = r.level; delete i.na[api.item.id]; }
+        if (r.cycles != null) i.inputs.cycles = r.cycles;
+        i.tools.galaxybatt = { health: r.health, src: r.src, cycles: r.cycles, model: r.model };
+      });
+      api.toast('Đã ghi pin vào phiếu'); api.close();
+    };
+  };
+  el.querySelector('#g-f').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    out.innerHTML = ''; bar.style.width = '0'; st.textContent = 'Đang mở ' + f.name + '…';
+    const t0 = Date.now();
+    try {
+      let stream, total;
+      const head = new Uint8Array(await f.slice(0, 4).arrayBuffer());
+      if (head[0] === 0x50 && head[1] === 0x4b && head[2] === 3 && head[3] === 4) {
+        const ent = await findZipEntry(f.size, reader(f));
+        if (!ent) throw new Error('Trong gói nén không có tệp dumpstate…txt. Hãy chọn tệp dumpState_….zip trong thư mục log.');
+        const start = await zipDataStart(reader(f), ent);
+        stream = f.slice(start, start + ent.csize).stream();
+        if (ent.method === 8) {
+          if (typeof DecompressionStream === 'undefined') throw new Error('Trình duyệt này chưa giải nén được. Cập nhật Chrome hoặc Samsung Internet rồi thử lại.');
+          stream = stream.pipeThrough(new DecompressionStream('deflate-raw'));
+        } else if (ent.method !== 0) throw new Error('Gói nén dùng kiểu nén lạ. Giải nén tay rồi chọn tệp dumpstate.txt.');
+        total = ent.usize || f.size * 5;
+      } else { stream = f.stream(); total = f.size; }
+      const rd = stream.pipeThrough(new TextDecoderStream()).getReader();
+      const sc = galaxyBattScanner();
+      let got = 0, paint = 0;
+      for (;;) {
+        const { value, done } = await rd.read();
+        if (done) break;
+        got += value.length;
+        if (sc.push(value)) { rd.cancel().catch(() => {}); break; }
+        if (Date.now() - paint > 120) { paint = Date.now(); bar.style.width = Math.min(100, got / total * 100) + '%'; st.textContent = 'Đang đọc… ' + Math.round(got / 1e6) + ' MB'; }
+      }
+      bar.style.width = '100%';
+      const secs = (Date.now() - t0) / 1000;
+      st.textContent = secs < 1 ? 'Xong trong chưa tới 1 giây.' : 'Xong trong ' + secs.toLocaleString('vi-VN', { maximumFractionDigits: 1 }) + ' giây.';
+      show(sc.result());
+    } catch (err) {
+      bar.style.width = '0'; st.textContent = '';
+      out.innerHTML = '<div class="note tone-warn">' + esc(err && err.message ? err.message : 'Không đọc được tệp này.') + '</div>';
+    }
+    e.target.value = '';
+  };
 };
 
 // ---------- Độ chai pin tai nghe ----------
@@ -3005,8 +3208,9 @@ function itemCard(insp, r, c, totalEw, v) {
     '<button class="lv t-' + toneOfLevel(l) + '" data-act="level" data-id="' + it.id + '" data-lv="' + l.id + '" aria-pressed="' + (lvl && lvl.id === l.id) + '">' + esc(l.label) + '</button>').join('') + '</div>';
   if (lvl && lvl.note) h += '<div class="note lvnote tone-' + toneOfLevel(lvl) + '">' + esc(lvl.note) + '</div>';
   const foot = [];
-  if (it.tool && TOOLS[it.tool]) foot.push('<button class="toolbtn" data-act="tool" data-tool="' + it.tool + '" data-item="' + it.id + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[it.tool]) + '</button>');
-  else if (it.tool === 'partno' || it.tool === 'imei') foot.push('<button class="toolbtn" data-act="goinfo" data-focus="f-' + it.tool + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[it.tool]) + '</button>');
+  const tl = typeof it.tool === 'function' ? it.tool(c) : it.tool;
+  if (tl && TOOLS[tl]) foot.push('<button class="toolbtn" data-act="tool" data-tool="' + tl + '" data-item="' + it.id + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[tl]) + '</button>');
+  else if (tl === 'partno' || tl === 'imei') foot.push('<button class="toolbtn" data-act="goinfo" data-focus="f-' + tl + '">' + icon('tool', 'sm') + esc(TOOL_NAMES[tl]) + '</button>');
   const cost = v && costHint(insp, it, r, c, v);
   if (cost) foot.push('<span class="small muted">' + cost + '</span>');
   if (lvl) foot.push('<button class="linkbtn muted" data-act="clear" data-id="' + it.id + '">Bỏ chọn</button>');

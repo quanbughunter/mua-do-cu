@@ -10,7 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / 'src'
 DIST = ROOT / 'dist'
 FONTS = ROOT / 'fontsrc'
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 JS_FILES = ['data-common.js', 'data-phone.js', 'data-headphones.js', 'data-camera.js', 'data-money.js',
             'decode.js', 'engine.js', 'tools.js', 'ui.js', 'app.js']
 
