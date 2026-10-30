@@ -59,6 +59,283 @@ function simExpectation(model, part) {
   return ESIM_ONLY[model.esim].indexOf(part.region) >= 0 ? 'none' : 'tray';
 }
 
+// ---------- Mã máy → bản nước nào (mọi hãng) ----------
+// Hãng không công bố đầy đủ. Bảng do cộng đồng tổng hợp: TheAppleWiki (Apple), AndroidSage / SamMobile (Samsung),
+// miuirom.org và Xiaomi Miui Hellas (Xiaomi). Dùng để đối chiếu, không phải bằng chứng duy nhất.
+// grp: nhóm vùng để so mã model với mã phần mềm ('kr' Hàn, 'us' Mỹ, 'cn' Trung Quốc, 'jp' Nhật, 'intl' còn lại).
+
+const APPLE_MARKET_NOTES = {
+  LL: 'Bản Mỹ: từ iPhone 14 trở đi chỉ có eSIM, không có khay SIM; iPhone 13 trở về trước có 1 khe nano SIM và eSIM.',
+  CH: 'Bản Trung Quốc đại lục: từ iPhone XS đến 16 có 2 khe nano SIM.',
+  ZP: 'Bản Hồng Kông, Macau: từ iPhone XS đến 16 thường có 2 khe nano SIM.',
+  ZA: 'Mã ZA dùng cho cả Hồng Kông (từ iPhone XS đến 16 thường 2 khe nano SIM) và Singapore (1 khe).',
+  J: 'Bản Nhật: tiếng chụp ảnh luôn kêu, không tắt được.',
+  KH: 'Bản Hàn: tiếng chụp ảnh luôn kêu, không tắt được.',
+  VN: 'Máy bán chính hãng tại Việt Nam, bảo hành được ở Việt Nam khi còn hạn.'
+};
+const APPLE_RU = ['RU', 'RS', 'RR', 'RP', 'RM'];
+
+const SS_MODELS = {
+  G980: 'Galaxy S20', G981: 'Galaxy S20 5G', G985: 'Galaxy S20+', G986: 'Galaxy S20+ 5G', G988: 'Galaxy S20 Ultra',
+  G780: 'Galaxy S20 FE', G781: 'Galaxy S20 FE 5G', G991: 'Galaxy S21', G996: 'Galaxy S21+', G998: 'Galaxy S21 Ultra', G990: 'Galaxy S21 FE',
+  S901: 'Galaxy S22', S906: 'Galaxy S22+', S908: 'Galaxy S22 Ultra',
+  S911: 'Galaxy S23', S916: 'Galaxy S23+', S918: 'Galaxy S23 Ultra', S711: 'Galaxy S23 FE',
+  S921: 'Galaxy S24', S926: 'Galaxy S24+', S928: 'Galaxy S24 Ultra', S721: 'Galaxy S24 FE',
+  S931: 'Galaxy S25', S936: 'Galaxy S25+', S938: 'Galaxy S25 Ultra', S937: 'Galaxy S25 Edge', S731: 'Galaxy S25 FE',
+  N970: 'Galaxy Note10', N971: 'Galaxy Note10 5G', N975: 'Galaxy Note10+', N976: 'Galaxy Note10+ 5G',
+  N980: 'Galaxy Note20', N981: 'Galaxy Note20 5G', N985: 'Galaxy Note20 Ultra', N986: 'Galaxy Note20 Ultra 5G',
+  F926: 'Galaxy Z Fold3', F711: 'Galaxy Z Flip3', F936: 'Galaxy Z Fold4', F721: 'Galaxy Z Flip4', F946: 'Galaxy Z Fold5', F731: 'Galaxy Z Flip5',
+  F956: 'Galaxy Z Fold6', F741: 'Galaxy Z Flip6', F966: 'Galaxy Z Fold7', F766: 'Galaxy Z Flip7',
+  A525: 'Galaxy A52', A526: 'Galaxy A52 5G', A528: 'Galaxy A52s 5G', A536: 'Galaxy A53 5G', A546: 'Galaxy A54 5G', A556: 'Galaxy A55 5G', A566: 'Galaxy A56 5G',
+  A346: 'Galaxy A34 5G', A356: 'Galaxy A35 5G', A366: 'Galaxy A36 5G', A256: 'Galaxy A25 5G', A266: 'Galaxy A26 5G',
+  A155: 'Galaxy A15', A156: 'Galaxy A15 5G', A165: 'Galaxy A16', A166: 'Galaxy A16 5G'
+};
+const SS_SUFFIX = {
+  B: { text: 'Quốc tế (châu Âu, Nga, Trung Á, Đông Nam Á, Việt Nam…)', tone: 'pass', grp: 'intl' },
+  F: { text: 'Quốc tế (đời cũ hoặc dòng 4G)', tone: 'pass', grp: 'intl' },
+  E: { text: 'Châu Á, châu Phi', tone: 'pass', grp: 'intl' },
+  M: { text: 'Mỹ Latinh', tone: 'info', grp: 'intl' },
+  N: { text: 'Hàn Quốc', tone: 'info', grp: 'kr', note: 'Bản Hàn: thường chỉ 1 khe nano SIM (đời mới có thêm eSIM). Tiếng chụp ảnh bắt buộc khi lắp SIM Hàn. Bảo hành theo Samsung Hàn.' },
+  U: { text: 'Mỹ, bản nhà mạng', tone: 'warn', grp: 'us', note: 'Bản nhà mạng Mỹ: có thể bị khoá mạng, phần mềm và cập nhật theo nhà mạng. Kiểm kỹ mục Không khoá nhà mạng.' },
+  U1: { text: 'Mỹ, bản không khoá mạng', tone: 'info', grp: 'us', note: 'Bản Mỹ: thường 1 khe nano SIM và eSIM.' },
+  W: { text: 'Canada', tone: 'info', grp: 'ca' },
+  '0': { text: 'Trung Quốc, Hồng Kông, Đài Loan', tone: 'info', grp: 'cn', note: 'Thường có 2 khe nano SIM. Xem mã CSC: CHC/CHN là Trung Quốc đại lục, TGY Hồng Kông, BRI Đài Loan.' },
+  Q: { text: 'Nhật Bản, bản không khoá mạng', tone: 'info', grp: 'jp', note: 'Máy Nhật: tiếng chụp ảnh luôn kêu.' }
+};
+const SS_CSC = {
+  XXV: ['Việt Nam', 'intl'], XEV: ['Việt Nam', 'intl'], SER: ['Nga', 'intl'], SKZ: ['Kazakhstan', 'intl'], CAU: ['Kavkaz (Armenia, Azerbaijan, Gruzia)', 'intl'],
+  CAC: ['Uzbekistan', 'intl'], SEK: ['Ukraina', 'intl'], KOO: ['Hàn Quốc (bản không nhà mạng)', 'kr'], SKC: ['Hàn Quốc (SK Telecom)', 'kr'],
+  KTC: ['Hàn Quốc (KT)', 'kr'], LUC: ['Hàn Quốc (LG U+)', 'kr'], OKR: ['Hàn Quốc (nhóm phần mềm Hàn)', 'kr'],
+  XAA: ['Mỹ (không nhà mạng)', 'us'], ATT: ['Mỹ (AT&T)', 'us'], TMB: ['Mỹ (T-Mobile)', 'us'], VZW: ['Mỹ (Verizon)', 'us'], USC: ['Mỹ (US Cellular)', 'us'],
+  OYM: ['Mỹ (nhóm phần mềm Mỹ, không khoá mạng)', 'us'], OYN: ['Mỹ (nhóm phần mềm nhà mạng Mỹ)', 'us'], XAC: ['Canada', 'ca'],
+  CHC: ['Trung Quốc đại lục', 'cn'], CHN: ['Trung Quốc đại lục', 'cn'], TGY: ['Hồng Kông', 'cn'], BRI: ['Đài Loan', 'cn'],
+  INS: ['Ấn Độ', 'intl'], INU: ['Ấn Độ', 'intl'], XSG: ['UAE, vùng Vịnh', 'intl'], KSA: ['Ả Rập Xê Út', 'intl'], MID: ['Iraq, UAE', 'intl'],
+  THL: ['Thái Lan', 'intl'], XME: ['Malaysia', 'intl'], XSP: ['Singapore', 'intl'], SIN: ['Singapore (SingTel)', 'intl'], XID: ['Indonesia', 'intl'], XTC: ['Philippines', 'intl'],
+  XEO: ['Ba Lan', 'intl'], EUX: ['Châu Âu', 'intl'], EUY: ['Châu Âu', 'intl'], BTU: ['Anh, Ireland', 'intl'], DBT: ['Đức', 'intl'], XEF: ['Pháp', 'intl'],
+  ITV: ['Ý', 'intl'], PHE: ['Tây Ban Nha', 'intl'], TUR: ['Thổ Nhĩ Kỳ', 'intl'], ORX: ['Slovakia', 'intl'], ZTO: ['Brazil', 'intl'], TPA: ['Panama', 'intl'], XSA: ['Úc', 'intl'],
+  OXM: ['Nhóm phần mềm quốc tế (nhiều nước châu Âu, châu Á)', 'intl'], OXE: ['Nhóm phần mềm Nga, Kazakhstan, Ukraina, UAE', 'intl'],
+  OXA: ['Nhóm phần mềm Tây Âu (Anh, Pháp, Đức, Ý, Ba Lan)', 'intl'], OLB: ['Nhóm phần mềm Đông Nam Á (Việt Nam, Thái Lan, Malaysia, Philippines, Singapore)', 'intl'],
+  OWO: ['Nhóm phần mềm Mỹ Latinh', 'intl']
+};
+const SS_GRP_NAME = { kr: 'Hàn Quốc', us: 'Mỹ', cn: 'Trung Quốc / Hồng Kông / Đài Loan', jp: 'Nhật Bản', ca: 'Canada', intl: 'quốc tế' };
+
+const XM_SUFFIX = {
+  G: { text: 'Quốc tế', tone: 'pass', grp: 'intl' }, Y: { text: 'Quốc tế', tone: 'pass', grp: 'intl' },
+  C: { text: 'Trung Quốc', tone: 'warn', grp: 'cn', note: 'Máy bán ở Trung Quốc. Nếu còn ROM Trung Quốc: thiếu dịch vụ Google, thông báo dễ chậm. Xem thêm Phiên bản HyperOS.' },
+  I: { text: 'Ấn Độ', tone: 'info', grp: 'intl' }, L: { text: 'Mỹ Latinh', tone: 'info', grp: 'intl' },
+  J: { text: 'Nhật Bản', tone: 'info', grp: 'jp', note: 'Máy Nhật: tiếng chụp ảnh luôn kêu.' }
+};
+const XM_ROM = {
+  MI: ['ROM quốc tế (Global)', 'pass', 'intl'], EU: ['ROM châu Âu (EEA)', 'pass', 'intl'], RU: ['ROM Nga', 'pass', 'intl'],
+  ID: ['ROM Indonesia', 'pass', 'intl'], TR: ['ROM Thổ Nhĩ Kỳ', 'pass', 'intl'], IN: ['ROM Ấn Độ', 'info', 'intl'],
+  TW: ['ROM Đài Loan', 'info', 'intl'], JP: ['ROM Nhật Bản', 'info', 'jp'],
+  CN: ['ROM Trung Quốc', 'warn', 'cn']
+};
+const ANDROID_LETTER = { S: 12, T: 13, U: 14, V: 15, W: 16 };
+const CODE_BRAND_NAMES = { apple: 'Apple', samsung: 'Samsung', xiaomi: 'Xiaomi / Redmi / POCO', oppo: 'Oppo / OnePlus / Realme', vivo: 'vivo', honor: 'Honor / Huawei' };
+const HONOR_CN = ['AN', 'AL', 'TN', 'TL', 'DN', 'DL', 'CL'];
+const HONOR_INTL = ['NX', 'LX', 'L', 'N'];
+
+function mkCode(o) { return Object.assign({ ok: true, rows: [], notes: [], model: null, grp: null }, o); }
+
+function decodeOneCode(token) {
+  const s = String(token || '').trim().toUpperCase().replace(/[‐-―]/g, '-');
+  if (!s) return null;
+
+  // Samsung: dòng SAOMC trong Mã nhà cung cấp dịch vụ, vd. SAOMC_SM-S928B_OXM_SKZ_16_0005
+  let m = s.match(/^SAOMC_SM-?([A-Z]\d{3})([A-Z0-9]{0,3})_([A-Z]{3})_([A-Z]{3})/);
+  if (m) return samsungCscResult(s, [m[4], m[3]], m[1], m[2]);
+
+  // Samsung: Phiên bản CSC, vd. S928BOXM6DZI1, S918U1OYM2AWB1
+  m = s.match(/^([A-Z]\d{3})(U1|[A-Z]|0)?([A-Z]{3})(\d[A-Z0-9]{4,5})$/);
+  if (m && (SS_CSC[m[3]] || /^O[A-Z]{2}$/.test(m[3]))) return samsungCscResult(s, [m[3]], m[1], m[2] || '');
+  if (m && SS_MODELS[m[1]]) {
+    return mkCode({ brand: 'samsung', what: 'Phiên bản phần mềm Samsung', code: s, model: SS_MODELS[m[1]], ssBase: m[1],
+      market: { text: 'Không đọc được nước từ dòng này', tone: 'info' },
+      rows: [['Đời máy', SS_MODELS[m[1]]]],
+      notes: [{ tone: 'info', text: 'Đây là phiên bản phần mềm (PDA). Mã nước nằm ở dòng Phiên bản CSC hoặc Mã nhà cung cấp dịch vụ, cùng màn Thông tin phần mềm.' }] });
+  }
+
+  // Samsung: mã nhà mạng Nhật (docomo SC-xxX, au SCGxx)
+  if (/^(SC-\d{2}[A-Z]|SCG\d{2}|SCV\d{2})$/.test(s)) {
+    return mkCode({ brand: 'samsung', what: 'Mã máy Samsung bán qua nhà mạng Nhật', code: s, grp: 'jp',
+      market: { text: 'Nhật Bản, máy nhà mạng', tone: 'warn' },
+      notes: [{ tone: 'warn', text: 'Máy nhà mạng Nhật: dễ bị khoá mạng, thiếu băng tần dùng ở Việt Nam và Nga, tiếng chụp ảnh luôn kêu.' }] });
+  }
+
+  // Samsung: số model, vd. SM-S928B/DS, SM-S928N, SM-S928U1, SM-S9280
+  m = s.match(/^(SM-?)?([A-Z])(\d{3})([A-Z0-9]{0,3}?)(\/DS)?$/);
+  if (m && (m[1] || SS_MODELS[m[2] + m[3]]) && (m[1] || m[4])) {
+    const base = m[2] + m[3];
+    let suf = m[4];
+    let dual = !!m[5];
+    if (!SS_SUFFIX[suf] && suf.length === 2 && suf[1] === 'D' && SS_SUFFIX[suf[0]]) { suf = suf[0]; dual = true; }
+    const sx = SS_SUFFIX[suf] || null;
+    const name = SS_MODELS[base] || null;
+    const r = mkCode({ brand: 'samsung', what: 'Số model Samsung', code: 'SM-' + base + m[4] + (m[5] || ''), model: name, ssBase: base, grp: sx ? sx.grp : null,
+      market: sx ? { text: sx.text, tone: sx.tone } : { text: suf ? 'Hậu tố "' + suf + '" chưa có trong bảng' : 'Thiếu hậu tố vùng (chữ sau 3 số)', tone: 'info' } });
+    r.rows.push(['Đời máy', name || base + ' (chưa có trong bảng đời máy)']);
+    if (suf) r.rows.push(['Hậu tố', suf + (sx ? ' · ' + sx.text : '')]);
+    if (dual) r.rows.push(['SIM', '/DS: 2 SIM']);
+    if (sx && sx.note) r.notes.push({ tone: sx.tone === 'warn' ? 'warn' : 'info', text: sx.note });
+    return r;
+  }
+
+  // Samsung: mã CSC đứng riêng, vd. SER, SKZ/SKZ/SKZ, SKZ/SKZ/SKZ,SKZ/SKZ
+  if (/^[A-Z]{3}([\/,][A-Z]{3})*$/.test(s)) {
+    const codes = s.split(/[\/,]/);
+    if (codes.some(x => SS_CSC[x])) return samsungCscResult(s, codes, null, null);
+  }
+
+  // Apple: số máy, vd. MGCM3LL/A
+  if (/^([0-9]{1,3}|[A-Z])[A-Z0-9]{4}[A-Z]{1,2}\/[A-Z]$/.test(s) || /^[MFNPG][A-Z0-9]{4}[A-Z]{1,2}$/.test(s)) {
+    const p = decodeApplePartNo(s);
+    if (p && p.ok) {
+      const head = p.regionLegacy || p.regionModern;
+      const ru = APPLE_RU.indexOf(p.region) >= 0;
+      const r = mkCode({ brand: 'apple', what: 'Số máy Apple', code: s, grp: p.region === 'CH' ? 'cn' : p.region === 'LL' ? 'us' : p.region === 'J' ? 'jp' : p.region === 'KH' ? 'kr' : 'intl',
+        market: { text: head || 'Mã vùng ' + p.region + ' chưa có trong bảng', tone: p.region === 'VN' ? 'pass' : 'info' },
+        rows: [['Nguồn gốc', p.first + ' · ' + p.source.text], ['Mã vùng', p.region + (head ? ' · ' + head : '')]] });
+      if (p.regionModern && p.regionLegacy && p.regionModern !== p.regionLegacy) r.rows.push(['Từ iPhone 17 Pro', p.regionModern]);
+      if (p.source.tone !== 'pass') r.notes.push({ tone: p.source.tone === 'warn' ? 'warn' : 'info', text: 'Số máy bắt đầu bằng "' + p.first + '": ' + p.source.text + '.' + (p.source.note ? ' ' + p.source.note : '') });
+      const n = APPLE_MARKET_NOTES[p.region] || (ru ? 'Máy bán chính hãng tại Nga.' : '');
+      if (n) r.notes.push({ tone: 'info', text: n });
+      return r;
+    }
+  }
+  if (/^A\d{4}$/.test(s)) {
+    return mkCode({ brand: 'apple', what: 'Mã kiểu máy Apple', code: s, market: { text: 'Mã A chỉ cho biết đời máy, không rõ nước', tone: 'info' },
+      notes: [{ tone: 'info', text: 'Trong Cài đặt › Cài đặt chung › Giới thiệu, bấm vào dòng Số máy để đổi sang dạng có dấu gạch chéo (vd. MGCM3LL/A) rồi nhập lại.' }] });
+  }
+
+  // Xiaomi: phiên bản HyperOS / MIUI, vd. OS2.0.3.0.VNFMIXM, 3.0.305.0.WMLTWXM, V14.0.4.0.TKIJPXM
+  m = s.match(/^(OS|V)?(\d{1,2})\.(\d+)\.(\d+)\.(\d+)\.([A-Z])([A-Z]{2})([A-Z]{2})XM([A-Z]*)$/);
+  if (m) {
+    const rom = XM_ROM[m[8]];
+    const major = +m[2];
+    const r = mkCode({ brand: 'xiaomi', what: 'Phiên bản phần mềm Xiaomi', code: s, grp: rom ? rom[2] : null, romRegion: m[8],
+      market: rom ? { text: rom[0], tone: rom[1] } : { text: 'Mã vùng ROM "' + m[8] + '" chưa có trong bảng', tone: 'info' } });
+    r.rows.push(['Hệ điều hành', (major >= 10 ? 'MIUI ' + major : 'HyperOS ' + major) + (ANDROID_LETTER[m[6]] ? ' · Android ' + ANDROID_LETTER[m[6]] : '')]);
+    r.rows.push(['Mã vùng ROM', m[8] + 'XM' + (rom ? ' · ' + rom[0] : '')]);
+    if (m[8] === 'CN') r.notes.push({ tone: 'warn', text: 'ROM Trung Quốc: không có sẵn dịch vụ Google, thông báo ứng dụng dễ đến chậm, một số ứng dụng Việt hoặc ngân hàng có thể chạy không ổn định.' });
+    if (m[9]) r.notes.push({ tone: 'info', text: 'Đuôi "' + m[9] + '" sau XM thường là bản cho một nhà mạng.' });
+    return r;
+  }
+
+  // Xiaomi / Redmi / POCO: kiểu máy, vd. 2312DRA50G, 24040RN64Y
+  m = s.match(/^(\d{2})(\d{2})[0-9A-Z]{3,7}$/);
+  if (m && /[A-Z]$/.test(s) && /[A-Z]/.test(s.slice(4, -1)) && +m[2] >= 1 && +m[2] <= 12) {
+    const L = s.slice(-1), sx = XM_SUFFIX[L];
+    const r = mkCode({ brand: 'xiaomi', what: 'Kiểu máy Xiaomi / Redmi / POCO', code: s, grp: sx ? sx.grp : null,
+      market: sx ? { text: sx.text, tone: sx.tone } : { text: 'Chữ cuối "' + L + '" chưa có trong bảng', tone: 'info' } });
+    r.rows.push(['Chữ cuối', L + (sx ? ' · ' + sx.text : '')]);
+    r.rows.push(['Đăng ký mẫu', 'khoảng tháng ' + (+m[2]) + '/20' + m[1]]);
+    if (sx && sx.note) r.notes.push({ tone: sx.tone === 'warn' ? 'warn' : 'info', text: sx.note });
+    return r;
+  }
+
+  // Oppo / OnePlus: CPH = quốc tế, P + 2 chữ + 3 số = Trung Quốc; Realme: RMX
+  if (/^CPH\d{4}$/.test(s)) {
+    return mkCode({ brand: 'oppo', what: 'Kiểu máy Oppo / OnePlus', code: s, grp: 'intl', market: { text: 'Quốc tế', tone: 'pass' },
+      notes: [{ tone: 'info', text: 'Mã CPH là bản bán ngoài Trung Quốc, có sẵn dịch vụ Google.' }] });
+  }
+  if (/^P[A-Z]{2}\d{3}$/.test(s)) {
+    return mkCode({ brand: 'oppo', what: 'Kiểu máy Oppo / OnePlus', code: s, grp: 'cn', market: { text: 'Trung Quốc', tone: 'warn' },
+      notes: [{ tone: 'warn', text: 'Bản Trung Quốc: ColorOS bản nội địa, thường thiếu dịch vụ Google và ít ngôn ngữ. Hãng không bảo hành ngoài Trung Quốc.' }] });
+  }
+  if (/^RMX\d{4}$/.test(s)) {
+    return mkCode({ brand: 'oppo', what: 'Kiểu máy Realme', code: s, market: { text: 'Không đọc được nước từ mã RMX', tone: 'info' },
+      notes: [{ tone: 'info', text: 'Realme dùng mã RMX cho mọi thị trường. Xem ngôn ngữ, dịch vụ Google và phiên bản realme UI để đoán.' }] });
+  }
+
+  // vivo: V + 4 số, đuôi A thường là bản Trung Quốc
+  m = s.match(/^V(\d{4})([A-Z]?)$/);
+  if (m) {
+    const cn = m[2] === 'A';
+    return mkCode({ brand: 'vivo', what: 'Kiểu máy vivo', code: s, grp: cn ? 'cn' : 'intl',
+      market: { text: cn ? 'Thường là bản Trung Quốc' : 'Thường là bản quốc tế', tone: cn ? 'warn' : 'info' },
+      notes: [{ tone: 'info', text: 'Quy ước của vivo: mã có đuôi A thường là máy bán ở Trung Quốc, không đuôi là bản quốc tế. Đối chiếu thêm ngôn ngữ và dịch vụ Google.' }] });
+  }
+
+  // Honor / Huawei: 3 chữ - đuôi, vd. DNP-AN00 (TQ), DNP-NX9 (quốc tế), ELE-L29
+  m = s.match(/^([A-Z]{3})-([A-Z]{1,2})(\d{1,2})$/);
+  if (m) {
+    const cn = HONOR_CN.indexOf(m[2]) >= 0, intl = HONOR_INTL.indexOf(m[2]) >= 0;
+    const r = mkCode({ brand: 'honor', what: 'Kiểu máy Honor / Huawei', code: s, grp: cn ? 'cn' : intl ? 'intl' : null,
+      market: cn ? { text: 'Trung Quốc', tone: 'warn' } : intl ? { text: 'Quốc tế', tone: 'pass' } : { text: 'Đuôi "' + m[2] + m[3] + '" chưa có trong bảng', tone: 'info' } });
+    if (cn) r.notes.push({ tone: 'warn', text: 'Đuôi ' + m[2] + m[3] + ' là bản Trung Quốc: phần mềm nội địa, thiếu dịch vụ Google, không bảo hành ngoài Trung Quốc.' });
+    if (intl) r.notes.push({ tone: 'info', text: 'Bản quốc tế. Riêng Huawei đời mới thì bản quốc tế cũng không có dịch vụ Google; Honor quốc tế thì có.' });
+    return r;
+  }
+
+  // IMEI: không cho biết nước bán, nhưng kiểm tra được chữ số cuối
+  if (/^\d{15,16}$/.test(s)) {
+    const im = checkIMEI(s);
+    return mkCode({ brand: null, what: 'IMEI', code: s, market: { text: 'IMEI không cho biết máy bán ở nước nào', tone: 'info' },
+      rows: [['TAC', im.tac], ['Kiểm tra', im.ok ? (im.sv ? 'IMEISV 16 số' : 'Đúng thuật toán Luhn') : 'Sai chữ số cuối']],
+      notes: [{ tone: im.ok ? 'info' : 'stop', text: im.msg }] });
+  }
+
+  return { ok: false, code: s, msg: 'Chưa nhận ra mã "' + s + '".' };
+}
+
+function samsungCscResult(raw, codes, base, suf) {
+  const uniq = codes.filter((x, i) => codes.indexOf(x) === i);
+  const known = uniq.filter(x => SS_CSC[x]);
+  const main = SS_CSC[uniq[0]] || (known.length ? SS_CSC[known[0]] : null);
+  const r = mkCode({ brand: 'samsung', what: base ? 'Phần mềm Samsung (CSC)' : 'Mã CSC Samsung', code: raw, grp: main ? main[1] : null,
+    market: main ? { text: main[0], tone: main[1] === 'intl' ? 'pass' : 'info' } : { text: 'Mã CSC chưa có trong bảng', tone: 'info' } });
+  if (base) {
+    r.ssBase = base; r.model = SS_MODELS[base] || null;
+    r.rows.push(['Đời máy', (SS_MODELS[base] || base) + (suf ? ' · hậu tố ' + suf : '')]);
+    const sx = SS_SUFFIX[suf];
+    if (sx) r.suffixGrp = sx.grp;
+  }
+  uniq.forEach(x => r.rows.push(['CSC ' + x, SS_CSC[x] ? SS_CSC[x][0] : (/^O[A-Z]{2}$/.test(x) ? 'nhóm phần mềm nhiều nước' : 'chưa có trong bảng')]));
+  if (/^O[A-Z]{2}$/.test(uniq[0]) && uniq.length === 1) r.notes.push({ tone: 'info', text: 'Mã bắt đầu bằng O là nhóm phần mềm dùng cho nhiều nước. Nước cụ thể là mã 3 chữ ở dòng Mã nhà cung cấp dịch vụ (vd. SER/SER/SER).' });
+  if (r.suffixGrp && main && r.suffixGrp !== main[1] && [r.suffixGrp, main[1]].some(g => g !== 'intl')) {
+    r.notes.push({ tone: 'warn', text: 'Hậu tố model (' + SS_GRP_NAME[r.suffixGrp] + ') và phần mềm (' + SS_GRP_NAME[main[1]] + ') không cùng vùng: máy có thể đã bị cài lại phần mềm khác nước.' });
+  }
+  return r;
+}
+
+// Nhiều mã cách nhau bằng dấu cách / xuống dòng. Trả về từng mã và các cảnh báo khi so chéo.
+function decodeCodes(raw) {
+  const toks = String(raw || '').split(/[\s;]+/).map(t => t.replace(/^[,.:]+|[,.:]+$/g, '')).filter(t => t.length >= 3 && (/\d/.test(t) || /^[A-Za-z]{3}([\/,][A-Za-z]{3})*$/.test(t)));
+  const items = toks.slice(0, 6).map(decodeOneCode).filter(x => x && (x.ok || /\d/.test(x.code)));
+  const cross = [];
+  const ok = items.filter(x => x.ok);
+  const ssModel = ok.find(x => x.brand === 'samsung' && x.what === 'Số model Samsung' && x.grp);
+  const ssSoft = ok.find(x => x.brand === 'samsung' && x.what !== 'Số model Samsung' && x.grp);
+  if (ssModel && ssSoft && ssModel.grp !== ssSoft.grp && [ssModel.grp, ssSoft.grp].some(g => g !== 'intl')) {
+    cross.push({ tone: 'warn', text: 'Số model là bản ' + SS_GRP_NAME[ssModel.grp] + ' nhưng phần mềm là bản ' + SS_GRP_NAME[ssSoft.grp] + ': máy có thể đã bị cài lại phần mềm khác nước.' });
+  }
+  if (ssModel && ssSoft && ssModel.ssBase && ssSoft.ssBase && ssModel.ssBase !== ssSoft.ssBase) {
+    cross.push({ tone: 'warn', text: 'Số model (' + ssModel.ssBase + ') và phần mềm (' + ssSoft.ssBase + ') thuộc hai đời máy khác nhau.' });
+  }
+  const xmModel = ok.find(x => x.brand === 'xiaomi' && x.what.indexOf('Kiểu máy') === 0);
+  const xmRom = ok.find(x => x.brand === 'xiaomi' && x.romRegion);
+  if (xmModel && xmRom && xmModel.grp === 'cn' && xmRom.romRegion !== 'CN') {
+    cross.push({ tone: 'warn', text: 'Máy bản Trung Quốc nhưng chạy ' + (XM_ROM[xmRom.romRegion] ? XM_ROM[xmRom.romRegion][0] : 'ROM ' + xmRom.romRegion) + ': máy đã bị mở khoá và cài lại ROM, thường là ROM sửa. Rủi ro: cập nhật lỗi, ứng dụng ngân hàng có thể từ chối máy đã mở khoá.' });
+  } else if (xmModel && xmRom && xmModel.grp === 'intl' && xmRom.romRegion === 'CN') {
+    cross.push({ tone: 'warn', text: 'Máy bản quốc tế nhưng chạy ROM Trung Quốc: phần mềm đã bị cài lại.' });
+  }
+  return { items, cross };
+}
+
+// Đối chiếu mã đã giải với đời máy đang chọn trong phiếu.
+function codeModelMismatch(model, res) {
+  if (!model || !res) return null;
+  const items = (res.items || []).filter(x => x.ok);
+  if (model.brand === 'samsung' && model.sm) {
+    const hit = items.find(x => x.ssBase && x.ssBase !== model.sm);
+    if (hit) return 'Mã ' + hit.ssBase + (hit.model ? ' (' + hit.model + ')' : '') + ' không phải ' + model.name + ' (' + model.sm + ').';
+  }
+  const other = items.find(x => x.brand && x.brand !== model.brand && !(model.brand === 'other' && ['oppo', 'vivo', 'honor'].indexOf(x.brand) >= 0));
+  if (other) return 'Mã vừa nhập là của ' + CODE_BRAND_NAMES[other.brand] + ', không khớp máy đang chọn (' + model.name + ').';
+  return null;
+}
+
 // ---------- IMEI ----------
 function luhnCheckDigit(body14) {
   let sum = 0;

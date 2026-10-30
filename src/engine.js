@@ -24,8 +24,9 @@ function buildContext(insp) {
   const model = getModel(cat, insp.model);
   const info = insp.info || {};
   const part = cat && cat.id === 'phone' && model && model.brand === 'apple' ? decodeApplePartNo(info.partno) : null;
+  const codes = cat && cat.id === 'phone' && model && model.brand !== 'apple' && (info.partno || info.code2) ? decodeCodes((info.partno || '') + ' ' + (info.code2 || '')) : null;
   return {
-    cat, model, info, part,
+    cat, model, info, part, codes,
     inputs: insp.inputs || {},
     brand: model ? model.brand : (info.brand || 'other'),
     simExpect: cat && cat.id === 'phone' ? simExpectation(model, part) : null,
@@ -367,12 +368,22 @@ function insights(insp, sc) {
   return out;
 }
 
+// Một dòng tóm tắt mã máy và thị trường cho báo cáo.
+function codeSummary(c) {
+  if (!c || !c.cat || c.cat.id !== 'phone') return '';
+  const raw = c.model && c.model.brand === 'apple' ? (c.info.partno || '') : ((c.info.partno || '') + ' ' + (c.info.code2 || ''));
+  const items = decodeCodes(raw).items.filter(x => x.ok);
+  return items.map(x => x.code + ' (' + x.market.text + ')').join(', ');
+}
+
 // Báo cáo dạng chữ để gửi người bán / lưu lại.
 function reportText(insp, s) {
   const sc = scoreInspection(insp), v = valuate(insp, s, sc), c = sc.ctx;
   const L = [];
   L.push('PHIẾU KIỂM ĐỒ CŨ — ' + (c.model ? c.model.name : c.cat.name) + (insp.info.storage ? ' ' + insp.info.storage : ''));
   L.push(new Date(insp.updated).toLocaleString('vi-VN'));
+  const mk = codeSummary(c);
+  if (mk) L.push('Mã máy: ' + mk);
   if (sc.score != null) L.push('Điểm: ' + Math.round(sc.score) + '/100 · ' + sc.grade.name + (sc.provisional ? ' (tạm tính)' : '') + ' · đã kiểm ' + sc.counts.done + '/' + sc.counts.total + ' mục');
   if (sc.cos.grade) L.push('Ngoại hình: ' + sc.cos.grade.id + ' (' + sc.cos.grade.name + ') · Chức năng: ' + (sc.faults.length ? sc.faults.length + ' lỗi' : 'chưa thấy lỗi'));
   if (v.verdict) L.push('Kết luận: ' + v.verdict.stamp.toUpperCase() + (v.reasons.length ? ' — ' + v.reasons.join('; ') : ''));

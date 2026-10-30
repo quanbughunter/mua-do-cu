@@ -32,7 +32,7 @@ function sampleInspection() {
 const S = {
   settings: Object.assign({}, DEFAULT_SETTINGS, store.get(K_SET, {})),
   list: (store.get(K_LIST, null) || []).map(normalize),
-  ui: { view: 'home', id: null, tab: 'info', open: {}, confirmDel: null, editCost: null, showRisk: false, layer: null, confirmWipe: false }
+  ui: { view: 'home', id: null, tab: 'info', open: {}, confirmDel: null, editCost: null, showRisk: false, layer: null, confirmWipe: false, quick: null, quickVal: {} }
 };
 if (!S.list.length && !store.get(K_SEEN, false)) { S.list.push(sampleInspection()); store.set(K_SEEN, true); }
 
@@ -46,9 +46,17 @@ const $layer = document.getElementById('layer');
 function render(keepScroll) {
   const y = window.scrollY;
   const insp = cur();
+  // Giữ ô đang gõ sau khi vẽ lại (vd. vừa rời ô mã máy sang ô kế tiếp).
+  const ae = document.activeElement;
+  const aid = ae && ae.id && $app.contains(ae) && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) ? ae.id : null;
+  const sel = aid && typeof ae.selectionStart === 'number' ? [ae.selectionStart, ae.selectionEnd] : null;
   if (S.ui.view === 'insp' && insp) $app.innerHTML = renderInsp(insp);
   else { S.ui.view = 'home'; $app.innerHTML = renderHome(); }
   if (keepScroll) window.scrollTo(0, y);
+  if (aid) {
+    const el = document.getElementById(aid);
+    if (el) { el.focus({ preventScroll: true }); if (sel && el.setSelectionRange) { try { el.setSelectionRange(sel[0], sel[1]); } catch (e) {} } }
+  }
 }
 
 // Cập nhật phần phụ thuộc khi đang gõ (không vẽ lại cả trang để giữ con trỏ).
@@ -56,7 +64,7 @@ function refreshLive(kind) {
   const insp = cur(); if (!insp) return;
   const sc = scoreInspection(insp), v = valuate(insp, S.settings, sc), c = sc.ctx;
   const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
-  if (kind === 'partno') set('d-partno', decodePartHTML(c));
+  if (kind === 'partno') set('d-partno', c.brand === 'apple' ? decodePartHTML(c) : codesHTML(c.codes, c.model));
   if (kind === 'imei') set('d-imei', decodeImeiHTML(insp.info.imei));
   if (kind === 'price') { set('d-comps', compsHTML(insp)); set('d-ref', refHTML(insp, c)); }
   const tk = document.querySelector('.ticket');
@@ -165,6 +173,18 @@ document.addEventListener('click', e => {
     case 'resetcost': if (insp) { delete insp.costs[id]; touch(insp); } S.ui.editCost = null; render(true); break;
     case 'togglerisk': S.ui.showRisk = !S.ui.showRisk; render(true); break;
     case 'settings': S.ui.layer = 'settings'; $layer.innerHTML = renderSettings(); break;
+    case 'quick': {
+      const q = b.dataset.q;
+      S.ui.layer = 'quick'; S.ui.quick = q;
+      $layer.innerHTML = renderQuick(q, S.ui.quickVal[q] || '');
+      setTimeout(() => { const f = document.getElementById(q === 'market' ? 'q-code' : 'q-imei'); if (f) f.focus(); }, 30);
+      break;
+    }
+    case 'qex': {
+      const f = document.getElementById('q-code');
+      if (f) { f.value = b.dataset.v; S.ui.quickVal.market = f.value; document.getElementById('q-out').innerHTML = quickMarketOut(f.value); }
+      break;
+    }
     case 'closelayer': closeLayer(); break;
     case 'resetsettings': S.settings = Object.assign({}, DEFAULT_SETTINGS); store.set(K_SET, S.settings); $layer.innerHTML = renderSettings(); toast('Đã về mặc định'); break;
     case 'exportdata': copyText(JSON.stringify({ app: 'soi-do-cu', v: 1, list: S.list }, null, 0)); break;
@@ -188,13 +208,20 @@ document.addEventListener('click', e => {
 
 document.addEventListener('input', e => {
   const t = e.target;
+  if (t.id === 'q-code' || t.id === 'q-imei') {
+    const q = t.id === 'q-code' ? 'market' : 'imei';
+    S.ui.quickVal[q] = t.value;
+    const out = document.getElementById('q-out');
+    if (out) out.innerHTML = q === 'market' ? quickMarketOut(t.value) : quickImeiOut(t.value);
+    return;
+  }
   const insp = cur();
   if (t.dataset.f && insp) {
     const path = t.dataset.f;
     if (path === 'model') return;
     const k = path.split('.')[1];
     let val = t.value;
-    if (k === 'partno') val = val.toUpperCase();
+    if (k === 'partno' || k === 'code2') val = val.toUpperCase();
     insp.info[k] = val;
     touch(insp);
     refreshLive(t.dataset.live);
@@ -208,7 +235,7 @@ document.addEventListener('change', e => {
     insp.model = t.value; touch(insp); render(true); return;
   }
   if (t.dataset.f === 'info.storage' && insp) { insp.info.storage = t.value; touch(insp); render(true); return; }
-  if (t.dataset.f && insp && (t.dataset.live === 'partno')) { render(true); return; }
+  if (t.dataset.f && insp && (t.dataset.live === 'partno')) { setTimeout(() => render(true), 0); return; }
   if (t.dataset.input && insp) {
     const k = t.dataset.input, it = buildContext(insp).cat.items.find(x => x.id === t.dataset.item);
     const val = t.value === '' ? null : parseFloat(t.value);

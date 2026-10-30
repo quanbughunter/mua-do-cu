@@ -15,6 +15,17 @@ Bản đầu làm ba nhóm: **điện thoại** (iPhone SE 2 → 18 Pro Max, Gal
    - Mục chưa kiểm không được coi là đạt: mỗi mục trừ "khả năng lỗi × chi phí sửa" (vd. Face ID 15% theo số liệu bán buôn của HOBI).
 5. **Kết luận.** Giá đòi ≤ giá hợp lý: mua. Cao hơn đến mức giá hợp lý ÷ 0,73: trả giá (0,73 = giá chốt / giá rao trung bình trong 25 triệu cuộc trả giá trên eBay). Cao hơn nữa: bỏ.
 
+## Tra mã máy: bản nước nào
+
+Ở trang đầu, mục **Tra nhanh › Mã máy → bản nước nào** (không cần tạo phiếu), hoặc ô mã máy trong tab Thông tin của phiếu điện thoại. App đọc:
+
+- **iPhone:** số máy (MGCM3LL/A): máy mới, tân trang, đổi bảo hành hay trưng bày; mã vùng; ghi chú SIM (bản Mỹ từ iPhone 14 chỉ eSIM, bản Trung Quốc/Hồng Kông 2 khe SIM), tiếng chụp bắt buộc (Nhật, Hàn).
+- **Samsung:** số model (SM-S928B/DS, SM-S928N, SM-S928U1, SM-S9280) ra đời máy và vùng; mã CSC (SER/SER/SER, dòng SAOMC, Phiên bản CSC S928BOXM…); máy nhà mạng Nhật (SC-…, SCG…).
+- **Xiaomi / Redmi / POCO:** kiểu máy (2312DRA50G: chữ cuối G/Y quốc tế, C Trung Quốc, I Ấn Độ, L Mỹ Latinh, J Nhật; 4 số đầu là tháng đăng ký mẫu) và phiên bản HyperOS/MIUI (MIXM, EUXM, CNXM, RUXM…; chữ cái ra bản Android).
+- **Oppo / OnePlus** (CPH quốc tế, P__### Trung Quốc), **vivo** (đuôi A thường là Trung Quốc), **Honor / Huawei** (AN00/AL00 Trung Quốc, NX9/LX9/L29 quốc tế), Realme (báo không đọc được), IMEI (kiểm Luhn).
+
+Nhập nhiều mã cách nhau bằng dấu cách để **so chéo**: số model Samsung bản Hàn mà phần mềm bản Nga, hoặc Xiaomi bản C mà chạy ROM Global, đều bị cảnh báo là phần mềm đã bị cài lại. Trong phiếu, nếu mã không khớp đời máy đã chọn (vd. chọn S24 Ultra mà mã là S918), app báo đỏ ngay dưới ô nhập. Bảng mã do cộng đồng tổng hợp (TheAppleWiki, AndroidSage, miuirom.org), hãng không công bố đầy đủ.
+
 ## Công cụ có sẵn
 
 Thử màn hình theo màu, thử cảm ứng phủ ô, loa trái/phải và quét tần số, ghi âm thử micro, tiếng ồn để thử chống ồn, cảm biến và rung, xem từng camera, trạng thái sạc (Android), tính độ chai pin tai nghe sau 20 phút nghe, đối chiếu số model AirPods, đọc ảnh máy ảnh (EXIF/MakerNote), tìm bụi cảm biến từ ảnh tường trắng, tìm điểm nóng và hàng/cột chết từ ảnh đậy nắp, **đọc độ khoẻ pin máy Samsung** (ASOC/BSOH, số vòng sạc) từ tệp nhật ký `*#9900#`: chọn tệp `dumpState_….zip` là app tự giải nén và dò ngay trên máy, khoảng một giây, đồng thời cảnh báo nếu nhật ký là của máy khác model trong phiếu.
@@ -29,7 +40,7 @@ Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu 
 | `src/data-common.js` | Mức chấm, hạng, hệ số ngoại hình, khấu hao, tiền tệ, ngưỡng kết luận |
 | `src/data-phone.js`, `data-headphones.js`, `data-camera.js` | Danh mục máy và các mục kiểm theo từng loại |
 | `src/data-money.js` | Bảng chi phí sửa theo bộ phận và luật trừ tiền cho từng mục |
-| `src/decode.js` | Giải mã số máy Apple, IMEI, số model AirPods, EXIF/MakerNote máy ảnh, đọc ZIP và dò pin trong nhật ký Samsung |
+| `src/decode.js` | Giải mã số máy Apple, mã máy Samsung/Xiaomi/Oppo/vivo/Honor ra thị trường, IMEI, số model AirPods, EXIF/MakerNote máy ảnh, đọc ZIP và dò pin trong nhật ký Samsung |
 | `src/engine.js` | Chấm điểm, định giá, kết luận, báo cáo (không dùng DOM, chạy được trong Node) |
 | `src/tools.js`, `src/ui.js`, `src/app.js` | Công cụ kiểm, giao diện, xử lý thao tác |
 | `src/styles.css`, `src/shell.html` | Giao diện, biểu tượng |
@@ -46,8 +57,9 @@ Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu 
 
 ```bash
 python3 build.py            # tạo dist/ và cập nhật index.html, sw.js, manifest ở thư mục gốc
-node tests/run.js           # 130 kiểm thử lõi: IMEI, số máy, tiền, chấm điểm, định giá, EXIF, pin Galaxy
+node tests/run.js           # 157 kiểm thử lõi: IMEI, số máy, mã máy theo hãng, tiền, chấm điểm, định giá, EXIF, pin Galaxy
 node tests/ui-smoke.js      # chụp màn hình 390px sáng/tối (cần Playwright)
+node tests/market-smoke.js  # thử Tra nhanh mã máy, IMEI và ô mã máy trong phiếu Samsung/Xiaomi
 node tests/tool-smoke.js    # chạy thử công cụ đọc ảnh, bụi, điểm nóng, pin tai nghe
 python3 tests/make_fixtures.py   # tạo lại ảnh JPEG mẫu (Canon, Sony, Nikon Z, Fujifilm) và nhật ký Samsung mẫu
 ```

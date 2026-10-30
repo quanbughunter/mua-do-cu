@@ -151,7 +151,12 @@ const PHONE = {
       id: 'ph.model', g: 'id', w: 3, gate: true, tool: 'partno',
       t: 'Đúng model, dung lượng, màu',
       path: { apple: 'Cài đặt › Cài đặt chung › Giới thiệu', samsung: 'Cài đặt › Thông tin điện thoại', default: 'Cài đặt › Giới thiệu điện thoại' },
-      how: { apple: 'Xem Tên máy, Số máy (dạng MFYN4ZA/A) và Dung lượng. Nhập Số máy vào ô Thông tin máy để giải mã: chữ đầu cho biết máy mới bán lẻ, tân trang hay máy đổi bảo hành; hai chữ cuối cho biết thị trường.', default: 'Xem tên model và dung lượng trong Cài đặt, so với lời người bán.' },
+      how: {
+        apple: 'Xem Tên máy, Số máy (dạng MFYN4ZA/A) và Dung lượng. Nhập Số máy vào ô Thông tin máy để giải mã: chữ đầu cho biết máy mới bán lẻ, tân trang hay máy đổi bảo hành; hai chữ cuối cho biết thị trường.',
+        samsung: 'Xem Số model (vd. SM-S928B/DS) và dung lượng. Vào Thông tin phần mềm chép thêm Mã nhà cung cấp dịch vụ (vd. SER/SER/SER). Nhập cả hai vào tab Thông tin: app báo bản nước nào và cảnh báo nếu phần mềm bị cài khác nước.',
+        xiaomi: 'Xem Kiểu máy trong Thông số chi tiết (vd. 2312DRA50G) và Phiên bản HyperOS. Nhập cả hai vào tab Thông tin: chữ cuối kiểu máy cho biết bản nước nào, đuôi phiên bản cho biết ROM gì.',
+        default: 'Xem Kiểu máy và dung lượng trong Cài đặt, so với lời người bán. Nhập Kiểu máy vào tab Thông tin để biết bản quốc tế hay bản Trung Quốc.'
+      },
       pass: 'Đúng như người bán mô tả.',
       levels: [
         { id: 'ok', label: 'Đúng mô tả', f: 1 },

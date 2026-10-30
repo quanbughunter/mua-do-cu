@@ -5,7 +5,7 @@ const TOOL_NAMES = {
   screen: 'Thử màn hình', touch: 'Thử cảm ứng', speaker: 'Thử loa', audio: 'Thử âm thanh trái, phải', mic: 'Thử micro',
   noise: 'Tiếng ồn để thử chống ồn', sensors: 'Cảm biến và rung', camera: 'Xem từng camera', battery: 'Trạng thái sạc',
   drain: 'Tính độ chai pin tai nghe', airpods: 'Đối chiếu số model AirPods', exif: 'Đọc ảnh máy ảnh', dust: 'Tìm bụi cảm biến',
-  hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Giải mã số máy', imei: 'Kiểm tra IMEI',
+  hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Tra mã máy: bản nước nào', imei: 'Kiểm tra IMEI',
   galaxybatt: 'Đọc pin Galaxy từ *#9900#'
 };
 

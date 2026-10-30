@@ -42,6 +42,8 @@ function renderHome() {
     '<p class="lede">Chọn máy, app sinh đúng danh sách cần kiểm. Kiểm xong từng mục thì ra điểm trên 100, giá hợp lý theo chi phí sửa, và câu trả lời: mua, trả giá hay bỏ.</p></section>' +
     '<div class="sect-h"><h2>Kiểm tra mới</h2></div><div class="cats">' +
     CATEGORIES.map(c => '<button class="cat" data-act="new" data-cat="' + c.id + '">' + icon(c.icon) + '<b>' + c.name + '</b><span>' + c.models.length + ' mẫu · ' + c.items.length + ' mục kiểm</span></button>').join('') + '</div>' +
+    '<div class="sect-h"><h2>Tra nhanh</h2></div><div class="quick">' +
+    Object.keys(QUICK).map(k => '<button class="qbtn" data-act="quick" data-q="' + k + '">' + icon(QUICK[k].icon) + '<span><b>' + esc(QUICK[k].name) + '</b><small>' + esc(QUICK[k].sub) + '</small></span>' + icon('chev', 'sm') + '</button>').join('') + '</div>' +
     '<div class="sect-h"><h2>Phiếu đã lưu</h2><span class="prog">' + list.length + '</span></div>' +
     (slips || '<div class="empty">Chưa có phiếu nào. Chọn một loại ở trên để bắt đầu.</div>') +
     '<p class="hint">Phiếu lưu trên trình duyệt của máy này, không gửi đi đâu. Mở Cài đặt để đổi tiền tệ, tỷ giá và hệ số giá sửa.</p></main>';
@@ -106,6 +108,77 @@ function decodePartHTML(c) {
     '<span><b>' + esc(p.region) + '</b> · ' + (reg.length ? esc(reg.join('; ')) : 'mã vùng chưa có trong bảng') + '</span>' +
     (sim ? '<span><b>SIM</b> · ' + sim + '</span>' : '') + '</div>';
 }
+// ---------- Mã máy → bản nước nào ----------
+const CODE_HELP = 'App đọc được: số máy iPhone (MGCM3LL/A), số model Samsung (SM-S928B/DS) và mã CSC (SER/SER/SER), kiểu máy Xiaomi (2312DRA50G) và phiên bản HyperOS (OS2.0.3.0.VNFMIXM), Oppo/OnePlus (CPH2651), vivo (V2324), Honor/Huawei (DNP-NX9).';
+const CODE_EXAMPLES = ['MGCM3LL/A', 'SM-S928N', 'SM-S928B/DS SER/SER/SER', '2312DRA50G', 'OS2.0.1.0.VNFCNXM', 'CPH2651', 'DNP-AN00'];
+const CODE_WHERE = [
+  ['iPhone', 'Cài đặt › Cài đặt chung › Giới thiệu › Số máy. Nếu thấy dạng A2342 thì bấm vào để đổi sang dạng MGCM3LL/A.'],
+  ['Samsung', 'Cài đặt › Thông tin điện thoại › Số model (SM-…). Rồi Thông tin phần mềm › Mã nhà cung cấp dịch vụ (vd. SER/SER/SER) hoặc Phiên bản CSC.'],
+  ['Xiaomi, Redmi, POCO', 'Cài đặt › Giới thiệu điện thoại › Thông số chi tiết › Kiểu máy, và dòng Phiên bản HyperOS.'],
+  ['Oppo, OnePlus, Realme, vivo, Honor, Huawei', 'Cài đặt › Giới thiệu điện thoại › Kiểu máy (hoặc Model).']
+];
+const QUICK = {
+  market: { name: 'Mã máy → bản nước nào', sub: 'iPhone, Samsung, Xiaomi, Oppo, vivo, Honor', icon: 'globe' },
+  imei: { name: 'Kiểm tra IMEI', sub: 'Đủ 15 số, đúng chữ số cuối', icon: 'hash' }
+};
+const toneCls = t => (t === 'pass' || t === 'warn' || t === 'stop' ? t : 'info');
+
+function codeCardHTML(x) {
+  if (!x.ok) return '<div class="note tone-warn">' + esc(x.msg) + ' ' + esc(CODE_HELP) + '</div>';
+  return '<article class="mk"><div class="mk-h"><span class="mk-what">' + esc(x.what) + '</span><span class="mono mk-code">' + esc(x.code) + '</span></div>' +
+    '<div class="mk-mkt c-' + toneCls(x.market.tone) + '">' + esc(x.market.text) + '</div>' +
+    (x.rows.length ? '<dl class="kv">' + x.rows.map(r => '<dt>' + esc(r[0]) + '</dt><dd>' + esc(r[1]) + '</dd>').join('') + '</dl>' : '') +
+    x.notes.map(n => '<div class="note tone-' + toneCls(n.tone) + '">' + esc(n.text) + '</div>').join('') + '</article>';
+}
+function codesHTML(res, model) {
+  if (!res || !res.items.length) return '';
+  const mm = model ? codeModelMismatch(model, res) : null;
+  return '<div class="stack mk-list">' + (mm ? '<div class="note tone-stop"><b>Không khớp máy đang chọn.</b> ' + esc(mm) + '</div>' : '') +
+    res.cross.map(n => '<div class="note tone-' + toneCls(n.tone) + '"><b>So chéo:</b> ' + esc(n.text) + '</div>').join('') +
+    res.items.map(codeCardHTML).join('') + '</div>';
+}
+function codeFieldHTML(c) {
+  const b = c.brand, I = c.info;
+  const L = {
+    samsung: ['Số model (Cài đặt › Thông tin điện thoại)', 'SM-S928B/DS', 'Mã nhà cung cấp dịch vụ (Thông tin phần mềm)', 'SER/SER/SER'],
+    xiaomi: ['Kiểu máy (Giới thiệu điện thoại › Thông số chi tiết)', '2312DRA50G', 'Phiên bản HyperOS', 'OS2.0.3.0.VNFMIXM'],
+    pixel: ['Kiểu máy (Cài đặt › Giới thiệu điện thoại)', 'GKWS6', null, null],
+    other: ['Kiểu máy (Cài đặt › Giới thiệu điện thoại)', 'CPH2651, V2324, DNP-NX9', null, null]
+  }[b] || ['Kiểu máy', '', null, null];
+  let h = '<div class="field"><label for="f-partno">' + L[0] + '</label><input class="inp mono" id="f-partno" data-f="info.partno" data-live="partno" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="' + esc(L[1]) + '" value="' + esc(I.partno || '') + '"></div>';
+  if (L[2]) h += '<div class="field"><label for="f-code2">' + L[2] + '</label><input class="inp mono" id="f-code2" data-f="info.code2" data-live="partno" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="' + esc(L[3]) + '" value="' + esc(I.code2 || '') + '"></div>';
+  return h + '<div id="d-partno">' + codesHTML(c.codes, c.model) + '</div>';
+}
+
+function quickMarketHTML(val) {
+  return '<p class="how">Gõ hoặc dán mã lấy trong Cài đặt của máy. Nhập nhiều mã cách nhau bằng dấu cách để app so chéo, vd. số model Samsung cùng mã CSC, hoặc kiểu máy Xiaomi cùng phiên bản HyperOS.</p>' +
+    '<div class="field"><label for="q-code">Mã máy</label><textarea class="inp mono" id="q-code" rows="2" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="MGCM3LL/A">' + esc(val || '') + '</textarea></div>' +
+    '<div class="links mk-ex"><span class="small muted">Thử:</span>' + CODE_EXAMPLES.map(e => '<button class="chiplink mono" data-act="qex" data-v="' + esc(e) + '">' + esc(e) + '</button>').join('') + '</div>' +
+    '<div id="q-out">' + quickMarketOut(val) + '</div>' +
+    '<details class="panel where"><summary>Mã nằm ở đâu trong máy</summary><dl class="kv">' + CODE_WHERE.map(w => '<dt>' + esc(w[0]) + '</dt><dd class="txt">' + esc(w[1]) + '</dd>').join('') + '</dl></details>' +
+    '<p class="hint">Hãng không công bố đầy đủ ý nghĩa các mã. Bảng trong app do cộng đồng tổng hợp (TheAppleWiki, AndroidSage, miuirom.org), dùng để đối chiếu với lời người bán, không thay cho kiểm tra máy.</p>';
+}
+function quickMarketOut(val) {
+  if (!val || !val.trim()) return '';
+  const r = decodeCodes(val);
+  return r.items.length ? codesHTML(r, null) : '<div class="note tone-warn">Chưa nhận ra mã nào. ' + esc(CODE_HELP) + '</div>';
+}
+function quickImeiHTML(val) {
+  return '<p class="how">Bấm *#06# trên máy để xem IMEI. Kiểm tra chữ số cuối theo thuật toán Luhn: gõ nhầm hoặc IMEI bị sửa sẽ sai. Máy 2 SIM có 2 IMEI, kiểm cả hai.</p>' +
+    '<div class="field"><label for="q-imei">IMEI</label><textarea class="inp mono" id="q-imei" rows="2" inputmode="numeric" autocomplete="off" spellcheck="false" placeholder="15 chữ số, mỗi dòng một IMEI">' + esc(val || '') + '</textarea></div>' +
+    '<div id="q-out">' + quickImeiOut(val) + '</div>' +
+    '<p class="hint">IMEI hợp lệ chưa chắc là máy sạch: muốn biết máy có bị báo mất hay không thì tra thêm ở trang danh sách đen (vd. imei.info); nhà mạng Nga và Việt Nam có thể không gửi dữ liệu vào danh sách chung.</p>';
+}
+function quickImeiOut(val) {
+  const list = String(val || '').split(/[\n,;]+/).map(x => x.replace(/\D/g, '')).filter(Boolean).slice(0, 4);
+  return '<div class="stack">' + list.map(d => '<div class="field"><span class="lbl mono">' + esc(d) + '</span>' + decodeImeiHTML(d) + '</div>').join('') + '</div>';
+}
+function renderQuick(name, val) {
+  const q = QUICK[name];
+  return '<div class="sheet"><header class="appbar"><div class="wrap row"><button class="iconbtn" data-act="closelayer" aria-label="Đóng">' + icon('x') + '</button><div class="ttl"><h1>' + esc(q.name) + '</h1><div class="sub">' + esc(q.sub) + '</div></div></div></header>' +
+    '<div class="wrap body">' + (name === 'market' ? quickMarketHTML(val) : quickImeiHTML(val)) + '</div></div>';
+}
+
 function decodeImeiHTML(v) {
   const r = checkIMEI(v);
   if (!r) return '';
@@ -133,6 +206,7 @@ function renderInfo(insp, sc, v) {
   if (cat.id === 'camera') h += '<div class="btnrow"><button class="toolbtn" data-act="tool" data-tool="exif" data-item="cm.shutter">' + icon('tool', 'sm') + 'Đọc ảnh chụp thử: model, sê-ri, số lần chụp</button></div>';
   if (cat.id === 'headphones' && c.brand === 'apple') h += '<div class="btnrow"><button class="toolbtn" data-act="tool" data-tool="airpods" data-item="hp.numbers">' + icon('tool', 'sm') + 'Đối chiếu số model in trên tai và hộp</button></div>';
   if (f.includes('storage')) h += '<div class="field"><label for="f-storage">Dung lượng</label><select class="inp" id="f-storage" data-f="info.storage"><option value="">—</option>' + STORAGES.map(s => '<option' + (I.storage === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div>';
+  if (f.includes('partno') && c.brand !== 'apple' && c.model) h += codeFieldHTML(c);
   if (f.includes('partno') && c.brand === 'apple') h += '<div class="field"><label for="f-partno">Số máy (Cài đặt › Cài đặt chung › Giới thiệu)</label><input class="inp mono" id="f-partno" data-f="info.partno" data-live="partno" autocapitalize="characters" autocomplete="off" placeholder="MFYN4ZA/A" value="' + esc(I.partno || '') + '"><div id="d-partno">' + decodePartHTML(c) + '</div></div>';
   if (f.includes('imei')) h += '<div class="field"><label for="f-imei">IMEI (bấm *#06#)</label><input class="inp mono" id="f-imei" data-f="info.imei" data-live="imei" inputmode="numeric" autocomplete="off" placeholder="15 chữ số" value="' + esc(I.imei || '') + '"><div id="d-imei">' + decodeImeiHTML(I.imei) + '</div></div>';
   if (f.includes('serial')) h += '<div class="field"><label for="f-serial">Số sê-ri</label><input class="inp mono" id="f-serial" data-f="info.serial" autocapitalize="characters" autocomplete="off" value="' + esc(I.serial || '') + '"></div>';

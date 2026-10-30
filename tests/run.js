@@ -212,6 +212,45 @@ ok(!!notJpeg.error, 'Không phải JPEG → báo lỗi');
 const rep = A.reportText(g, S);
 ok(/PHIẾU KIỂM ĐỒ CŨ/.test(rep) && /Giá hợp lý/.test(rep), 'Báo cáo chữ');
 
+// ---------- Mã máy → bản nước nào ----------
+{
+  const one = s => A.decodeOneCode(s);
+  const ip = one('MGCM3LL/A');
+  ok(ip.ok && ip.brand === 'apple' && ip.grp === 'us' && /eSIM/.test(ip.notes.map(n => n.text).join()), 'Mã máy: MGCM3LL/A là bản Mỹ, có ghi chú eSIM', ip);
+  ok(one('MGDF3VN/A').market.tone === 'pass' && one('MGDF3VN/A').market.text.indexOf('Việt Nam') >= 0, 'Mã máy: …VN/A là Việt Nam');
+  ok(one('A2342').what === 'Mã kiểu máy Apple', 'Mã máy: A2342 nhận ra là mã A, nhắc đổi sang số máy');
+  const sb = one('SM-S928B/DS');
+  ok(sb.brand === 'samsung' && sb.model === 'Galaxy S24 Ultra' && sb.grp === 'intl' && sb.rows.some(r => r[0] === 'SIM'), 'Mã máy: SM-S928B/DS quốc tế, 2 SIM', sb);
+  ok(one('SM-S928N').grp === 'kr' && one('SM-S928U').market.tone === 'warn' && one('SM-S928U1').grp === 'us' && one('SM-S9280').grp === 'cn', 'Mã máy: hậu tố N / U / U1 / 0');
+  ok(one('S928B').model === 'Galaxy S24 Ultra', 'Mã máy: thiếu "SM-" vẫn đọc được khi đời máy có trong bảng');
+  ok(one('SM-N975F/DS').model === 'Galaxy Note10+', 'Mã máy: Note10+ bản F');
+  ok(one('SER/SER/SER').market.text === 'Nga' && one('SKZ/SKZ/SKZ,SKZ/SKZ').market.text === 'Kazakhstan', 'Mã máy: CSC SER, SKZ');
+  const csv = one('S928BOXM6DZI1');
+  ok(csv.ssBase === 'S928' && csv.rows.some(r => r[0] === 'CSC OXM'), 'Mã máy: Phiên bản CSC S928BOXM…', csv);
+  ok(one('S928BXXS6DZI1').what === 'Phiên bản phần mềm Samsung', 'Mã máy: PDA không bị đọc nhầm thành CSC "XXS"');
+  ok(one('SAOMC_SM-S928B_OXM_SKZ_16_0005').market.text === 'Kazakhstan', 'Mã máy: dòng SAOMC lấy CSC đang chạy');
+  const xg = one('2312DRA50G');
+  ok(xg.brand === 'xiaomi' && xg.grp === 'intl' && xg.rows.some(r => /12\/2023/.test(r[1])), 'Mã máy: 2312DRA50G quốc tế, mẫu 12/2023', xg);
+  const rom = one('OS2.0.3.0.VNFMIXM');
+  ok(rom.romRegion === 'MI' && rom.rows[0][1] === 'HyperOS 2 · Android 15', 'Mã máy: OS2.0.3.0.VNFMIXM là ROM Global, Android 15', rom);
+  ok(one('3.0.305.0.WMLTWXM').romRegion === 'TW' && one('OS2.0.1.0.VNFCNXM').market.tone === 'warn', 'Mã máy: ROM TW, CN');
+  ok(one('CPH2651').grp === 'intl' && one('PKB110').grp === 'cn', 'Mã máy: Oppo CPH quốc tế, PKB Trung Quốc');
+  ok(one('DNP-AN00').grp === 'cn' && one('DNP-NX9').grp === 'intl' && one('ELE-L29').grp === 'intl', 'Mã máy: Honor/Huawei AN00 / NX9 / L29');
+  ok(one('V2324A').grp === 'cn' && one('V2324').grp === 'intl', 'Mã máy: vivo đuôi A');
+  ok(one('350683211411797').what === 'IMEI' && one('350683211411797').rows[1][1] === 'Đúng thuật toán Luhn', 'Mã máy: nhập IMEI thì kiểm Luhn, không đoán nước');
+  ok(!one('XYZ12').ok, 'Mã máy: mã lạ báo chưa nhận ra');
+  const c1 = A.decodeCodes('SM-S928N  SER/SER/SER');
+  ok(c1.items.length === 2 && c1.cross.length === 1, 'Mã máy: model Hàn + phần mềm Nga → cảnh báo cài lại', c1.cross);
+  ok(A.decodeCodes('SM-S928B/DS SER/SER/SER').cross.length === 0, 'Mã máy: model quốc tế + CSC Nga không cảnh báo');
+  ok(A.decodeCodes('2312DRA50C OS2.0.3.0.VNFMIXM').cross.length === 1, 'Mã máy: Xiaomi bản C chạy ROM Global → cảnh báo ROM sửa');
+  ok(A.decodeCodes('hello world').items.length === 0, 'Mã máy: chữ thường không sinh kết quả rác');
+  const PM = A.PHONE.models, mdl = id => PM.find(m => m.id === id);
+  ok(/S23 Ultra/.test(A.codeModelMismatch(mdl('ss-s24u'), A.decodeCodes('SM-S918B'))), 'Mã máy: chọn S24 Ultra mà mã là S23 Ultra → báo lệch');
+  ok(A.codeModelMismatch(mdl('ss-s24u'), A.decodeCodes('SM-S928N')) === null, 'Mã máy: đúng đời thì không báo lệch');
+  ok(/Apple/.test(A.codeModelMismatch(mdl('mi-rn13p'), A.decodeCodes('MGCM3LL/A'))), 'Mã máy: mã khác hãng → báo lệch');
+  ok(A.codeModelMismatch(mdl('and-other'), A.decodeCodes('CPH2651')) === null, 'Mã máy: "Android hãng khác" nhận mã Oppo');
+}
+
 // ---------- Pin Galaxy từ nhật ký *#9900# ----------
 (async () => {
   const note10 = 'x\n[ro.product.model]: [SM-N975F]\n[ro.build.PDA]: [N975FXXS9HWHA]\n' +
