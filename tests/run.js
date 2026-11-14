@@ -251,6 +251,62 @@ ok(/PHIẾU KIỂM ĐỒ CŨ/.test(rep) && /Giá hợp lý/.test(rep), 'Báo cá
   ok(A.codeModelMismatch(mdl('and-other'), A.decodeCodes('CPH2651')) === null, 'Mã máy: "Android hãng khác" nhận mã Oppo');
 }
 
+// ---------- Tên laptop Dell (quy tắc, không cần bảng) ----------
+{
+  const d = s => A.decodeDell(s);
+  const yr = s => (d(s) || {}).year;
+  ok(yr('Precision 5560') === 2021 && d('Precision 5560').size === '15,6″', 'Dell: Precision 5560 → 2021, 15,6″', d('Precision 5560'));
+  ok(yr('precision 7770') === 2022 && yr('Precision 3581') === 2023, 'Dell: Precision 7770 → 2022, 3581 → 2023');
+  ok(yr('Latitude 7420') === 2021 && yr('Latitude 5490') === 2018 && yr('Latitude 7400') === 2019, 'Dell: Latitude 7420 / 5490 / 7400');
+  ok(yr('Latitude E7450') === 2015 && yr('E5470') === 2016, 'Dell: Latitude đời E');
+  ok(yr('XPS 15 9510') === 2021 && yr('XPS 13 9320') === 2022 && yr('XPS 15 7590') === 2019, 'Dell: XPS 9510 / 9320 / 7590');
+  ok(yr('Inspiron 16 Plus 7620') === 2022 && d('Inspiron 16 Plus 7620').line === 'inspiron', 'Dell: Inspiron 16 Plus 7620 → 2022');
+  ok(yr('G15 5520') === 2022 && d('G15 5520').line === 'g' && yr('Dell G16 7630') === 2023, 'Dell: G15 5520, G16 7630');
+  ok(yr('Vostro 3510') === 2021, 'Dell: Vostro 3510 → 2021');
+  const pb = d('PB14250');
+  ok(pb.ok && pb.kind === 'new' && pb.title === 'Dell Pro 14 Plus' && pb.year === 2025, 'Dell: mã PB14250 → Dell Pro 14 Plus 2025', pb);
+  ok(d('MC16250').title === 'Dell Pro Max 16' && d('DA14250').title === 'Dell 14 Premium', 'Dell: MC16250, DA14250');
+  const pm = d('Dell Pro Max 16 Plus');
+  ok(pm.ok && pm.kind === 'new' && pm.title === 'Dell Pro Max 16 Plus', 'Dell: tên mới Pro Max 16 Plus', pm);
+  ok(!d('Alienware m15 R7').ok && /Alienware/.test(d('Alienware m15 R7').msg), 'Dell: Alienware báo đặt tên riêng');
+  ok(!d('ThinkPad T14').ok, 'Dell: tên lạ báo chưa nhận ra');
+  ok(d('') === null, 'Dell: ô trống không sinh kết quả');
+  ok(A.fmtVndRange([12500000, 16000000]) === '12,5 tr–16 tr ₫' && A.fmtVndRange([9000000, 9000000]) === '9 tr ₫', 'Dell: định dạng khoảng giá VND', A.fmtVndRange([12500000, 16000000]));
+}
+
+// ---------- Bảng đời máy Dell (src/data-dell.js) ----------
+{
+  const D = A.DELL_MODELS, d = s => A.decodeDell(s);
+  ok(D.length >= 150, 'Bảng Dell: đủ đời máy', D.length);
+  const ids = new Set(D.map(m => m.id));
+  ok(ids.size === D.length, 'Bảng Dell: id không trùng');
+  const bad = D.filter(m => !/^Dell /.test(m.name) || !m.year || m.year < 2016 || m.year > 2026 || !m.size || !m.cpu ||
+    (m.vnd && !(m.vnd[0] >= 2e6 && m.vnd[1] >= m.vnd[0] && m.vnd[1] <= 1.2e8)) || (m.usd && !(m.usd >= 300 && m.usd <= 6000)));
+  ok(!bad.length, 'Bảng Dell: tên, năm, cỡ màn, chip, khoảng giá hợp lệ', bad.map(m => m.id));
+  ok(A.LAPTOP.models.length === D.length + 2, 'Laptop: danh mục gồm bảng Dell + 2 mục khác');
+  const p = d('Precision 5560');
+  ok(p.models[0] && p.models[0].id === 'dl-precision-5560' && !p.approx && p.year === 2021 && p.models[0].dgpu && p.models[0].vnd, 'Bảng Dell: Precision 5560 có trong bảng, có card rời, có giá VN', p.models[0]);
+  const nb = A.dellNeighbors(p.models[0]);
+  ok(nb.prev && nb.prev.code === '5550' && nb.next && nb.next.code === '5570', 'Bảng Dell: đời trước 5550, đời sau 5570', [nb.prev && nb.prev.code, nb.next && nb.next.code]);
+  ok(d('XPS 13 9310').year === 2020 && d('XPS 13 9310').approx === false, 'Bảng Dell: XPS 13 9310 lấy năm 2020 theo bảng (quy tắc đoán 2021)');
+  const amb = d('5510');
+  ok(amb.kind === 'ambiguous' && ['latitude', 'vostro', 'g'].every(l => amb.models.some(m => m.line === l)), 'Bảng Dell: 5510 hỏi lại dòng (Latitude, Vostro, G15)', amb.models && amb.models.map(m => m.name));
+  ok(d('7620').kind === 'ambiguous' && d('G16 7620').models[0].line === 'g' && d('Inspiron 16 Plus 7620').models[0].line === 'inspiron', 'Bảng Dell: 7620 là G16 hoặc Inspiron 16 Plus');
+  ok(/2-in-1/.test(d('Inspiron 14 7430 2-in-1').warn) && !d('Inspiron 14 Plus 7430').warn, 'Bảng Dell: gõ 2-in-1 thì cảnh báo khác máy');
+  ok(d('MC14255').models[0] && d('MC14255').models[0].name === 'Dell Pro Max 14', 'Bảng Dell: mã MC14255 (AMD) ra Pro Max 14');
+  ok(d('PB14250').models[0] && d('PB14250').models[0].name === 'Dell Pro 14 Plus' && /AMD/.test(d('PB14255').parts[4].text), 'Bảng Dell: PB14250 ra Dell Pro 14 Plus, số cuối 5 là AMD');
+  ok(d('Pro Max 16 Plus').models[0] && d('Pro Max 16 Plus').models[0].usdNote, 'Bảng Dell: Pro Max 16 Plus có ghi chú giá');
+  ok(d('PW514260').ok && d('PW514260').title === 'Dell Pro Precision 5 14' && d('PW514260').year === 2026, 'Dell: mã PW514260 → Dell Pro Precision 2026');
+  ok(d('Latitude 5410').models[0].line === 'latitude' && d('Vostro 5410').models[0].line === 'vostro', 'Bảng Dell: Latitude 5410 khác Vostro 5410');
+  ok(!/[a-z]{3,} (?:configs|optional|with|up to|seen)\b/.test(D.map(m => [m.cpu, m.gpu, m.ram, m.storage, m.display].join(' ')).join(' ')), 'Bảng Dell: thông số đã dịch, không còn ghi chú tiếng Anh');
+  const ins = A.newInspection('laptop', 'dl-precision-5560');
+  const ref = A.referencePrice(ins, A.buildContext(ins), Object.assign({}, S, { currency: 'VND' }));
+  const mid = (p.models[0].vnd[0] + p.models[0].vnd[1]) / 2;
+  ok(ref.src === 'vnd' && near(ref.value, mid, 1), 'Phiếu laptop: giá tham chiếu = giữa khoảng giá cũ ở VN', ref);
+  const ins2 = A.newInspection('laptop', 'dl-xps-9640');
+  ok(A.referencePrice(ins2, A.buildContext(ins2), S).src === 'estimate', 'Phiếu laptop: chưa có giá VN thì ước tính từ giá Mỹ');
+}
+
 // ---------- Pin Galaxy từ nhật ký *#9900# ----------
 (async () => {
   const note10 = 'x\n[ro.product.model]: [SM-N975F]\n[ro.build.PDA]: [N975FXXS9HWHA]\n' +

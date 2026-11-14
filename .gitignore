@@ -2,3 +2,7 @@ dist/
 node_modules/
 tests/shots/
 __pycache__/
+android/out/
+android/keystore/
+*.apk
+*.jks

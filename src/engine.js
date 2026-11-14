@@ -214,6 +214,11 @@ function modelAgeYears(m, now) {
   return Math.max(0, ((now || Date.now()) - launch) / (365.25 * 864e5));
 }
 
+function fmtVndRange(v) {
+  const t = x => (Math.round(x / 100000) / 10).toLocaleString('vi-VN') + ' tr';
+  return v[1] && v[1] !== v[0] ? t(v[0]) + '–' + t(v[1]) + ' ₫' : t(v[0]) + ' ₫';
+}
+
 function referencePrice(insp, c, s) {
   const cur = s.currency;
   const comps = compStats(insp.info.comps, cur, s);
@@ -224,6 +229,11 @@ function referencePrice(insp, c, s) {
   }
   if (manual) return { value: convert(manual.value, manual.cur, cur, s), src: 'manual', comps, text: 'Giá tham chiếu bạn nhập' };
   const m = c.model;
+  if (m && m.vnd && m.vnd[0]) {
+    const mid = (m.vnd[0] + (m.vnd[1] || m.vnd[0])) / 2;
+    return { value: convert(mid, 'VND', cur, s), src: 'vnd', comps,
+      text: 'Giá máy cũ ở Việt Nam' + (m.vndSeen ? ' (' + m.vndSeen + ')' : '') + ': ' + fmtVndRange(m.vnd) + ', lấy giữa khoảng. Nên dán giá tin rao nơi bạn mua để chính xác hơn' };
+  }
   if (m && m.usd) {
     const age = modelAgeYears(m);
     const keep = interp(RETENTION[c.cat.retention(m)], age);

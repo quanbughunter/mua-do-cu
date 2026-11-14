@@ -1,0 +1,113 @@
+name: Build APK
+
+# GitHub build APK, ký bằng khoá cũ (lấy từ Secrets) rồi tạo Release có SoiDoCu-<phiên bản>.apk và SoiDoCu.apk.
+# Chạy tự động khi push lên main mà VERSION trong build.py là số mới (chưa có Release v<số đó>),
+# hoặc bấm "Run workflow" ở tab Actions để build lại bất kỳ lúc nào.
+on:
+  push:
+    branches: [main]
+    paths: ['build.py']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Phiên bản, ví dụ 0.4.1 (để trống = lấy VERSION trong build.py)'
+        required: false
+        default: ''
+      notes:
+        description: 'Ghi chú cho bản phát hành (không bắt buộc)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-apk
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      build: ${{ steps.ver.outputs.build }}
+      name: ${{ steps.ver.outputs.name }}
+      code: ${{ steps.ver.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Xác định phiên bản
+        id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ github.event.inputs.version }}"
+          if [ -z "$V" ]; then V=$(python3 -c "import re;print(re.search(r\"VERSION = '([^']+)'\", open('build.py').read()).group(1))"); fi
+          if ! echo "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then echo "::error::Phiên bản phải dạng 0.4.1, nhận được: $V"; exit 1; fi
+          IFS=. read -r MA MI PA <<< "$V"
+          echo "name=$V" >> "$GITHUB_OUTPUT"
+          echo "code=$((MA * 10000 + MI * 100 + PA))" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "push" ] && gh release view "v$V" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Đã có Release v$V: push này không đổi phiên bản nên không build. Muốn build lại thì bấm Run workflow."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Sẽ build phiên bản $V (versionCode $((MA * 10000 + MI * 100 + PA)))"
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  apk:
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    # Ghim Ubuntu 24.04: các gói aapt, dalvik-exchange, android-sdk-platform-23 đã kiểm tra chạy được ở bản này
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Kiểm tra khoá ký
+        env:
+          KS_B64: ${{ secrets.SOIDOCU_KEYSTORE_B64 }}
+          KS_PASS: ${{ secrets.SOIDOCU_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KS_B64" ] || [ -z "$KS_PASS" ]; then
+            echo "::error::Thiếu secret SOIDOCU_KEYSTORE_B64 hoặc SOIDOCU_KEYSTORE_PASSWORD (Settings → Secrets and variables → Actions). Không có khoá cũ thì APK không cài đè được lên app đã cài."
+            exit 1
+          fi
+          mkdir -p android/keystore
+          echo "$KS_B64" | base64 -d > android/keystore/soi-do-cu-release.jks
+          printf '%s' "$KS_PASS" > android/keystore/PASSWORD.txt
+
+      - name: Cài công cụ Android
+        run: |
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq aapt apksigner zipalign android-sdk-platform-23 dalvik-exchange
+
+      - name: Build web
+        run: |
+          sed -i "s/^VERSION = '[^']*'/VERSION = '${{ needs.check.outputs.name }}'/" build.py
+          python3 build.py
+
+      - name: Build và ký APK
+        run: |
+          chmod +x android/build_apk.sh
+          VERSION_NAME=${{ needs.check.outputs.name }} VERSION_CODE=${{ needs.check.outputs.code }} ./android/build_apk.sh
+          cp android/out/SoiDoCu-${{ needs.check.outputs.name }}.apk android/out/SoiDoCu.apk
+
+      - name: Tạo Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          V: ${{ needs.check.outputs.name }}
+          NOTES: ${{ github.event.inputs.notes }}
+        run: |
+          MSG=$(git log -1 --pretty=%s)
+          BODY="${NOTES:-$MSG}"
+          BODY="$BODY
+
+          Cài: tải SoiDoCu-$V.apk ở mục Assets, mở file và bấm Cài đặt. Bản này cài đè lên bản cũ, phiếu vẫn giữ.
+          Link luôn tải bản mới nhất: https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/SoiDoCu.apk"
+          if gh release view "v$V" >/dev/null 2>&1; then
+            gh release upload "v$V" "android/out/SoiDoCu-$V.apk" android/out/SoiDoCu.apk --clobber
+          else
+            gh release create "v$V" "android/out/SoiDoCu-$V.apk" android/out/SoiDoCu.apk \
+              --target "$GITHUB_SHA" --title "Soi Đồ Cũ $V" --notes "$BODY" --latest
+          fi
+          echo "### Đã tạo bản Soi Đồ Cũ $V" >> "$GITHUB_STEP_SUMMARY"
+          echo "Tải: https://github.com/${GITHUB_REPOSITORY}/releases/tag/v$V" >> "$GITHUB_STEP_SUMMARY"

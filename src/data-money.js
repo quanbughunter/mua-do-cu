@@ -57,13 +57,30 @@ function cameraRepairUSD(m) {
   };
 }
 
+// Laptop: ước lượng giá linh kiện thay ngoài (USD), sửa được trên màn kết quả. Màn 4K/OLED, máy trạm đắt hơn.
+function laptopRepairUSD(m) {
+  const usd = (m && m.usd) || 1000;
+  const big = m && /1[67]/.test(m.size || '');
+  const hi = m && /OLED|UHD|3840|4K|3K|2880|3456/.test(m.display || '');
+  return {
+    lbatt: m && /9[0-9]|8[6-9]/.test(String(m.battery || '')) ? 110 : 85,
+    lscreen: (hi ? 280 : 140) + (big ? 40 : 0),
+    keyboard: 90, touchpad: 70, hinge: 80, charger: m && /1[38]0|240/.test(m.charger || '') ? 80 : 45,
+    ssd: 60, fan: 30, lports: 70, lspeaker: 45, webcam: 40, wifi: 25,
+    lcase: R(usd * 0.06) + 40, lboard: R(usd * 0.3), gpu: R(usd * 0.35)
+  };
+}
+
 const PART_NAMES = {
   screen: 'thay màn hình', battery: 'thay pin', back: 'thay kính lưng / vỏ', rearcam: 'thay camera sau', frontcam: 'thay camera trước',
   bio: 'mất Face ID / Touch ID', port: 'thay cổng sạc', speaker: 'thay loa', mic: 'thay micro', buttons: 'sửa nút', vibrate: 'thay motor rung',
   sensors: 'sửa cảm biến', camglass: 'thay kính camera', board: 'sửa bo mạch',
   bud: 'thay một tai', batt: 'thay tai (pin chai)', case: 'thay hộp sạc', tips: 'mua nút tai', clean: 'vệ sinh', hinge: 'sửa bản lề', cushion: 'thay đệm tai',
   shutter: 'thay màn trập', sensor: 'thay cảm biến', af: 'sửa lấy nét', ibis: 'sửa chống rung', lcd: 'thay màn LCD', evf: 'thay kính ngắm',
-  slot: 'thay khe thẻ', ports: 'sửa cổng', mount: 'thay ngàm', grip: 'thay cao su', water: 'xử lý hỏng do nước'
+  slot: 'thay khe thẻ', ports: 'sửa cổng', mount: 'thay ngàm', grip: 'thay cao su', water: 'xử lý hỏng do nước',
+  lbatt: 'thay pin laptop', lscreen: 'thay màn laptop', keyboard: 'thay bàn phím', touchpad: 'thay touchpad', charger: 'mua sạc',
+  ssd: 'thay SSD', fan: 'vệ sinh, tra keo', lports: 'sửa cổng', lspeaker: 'thay loa', webcam: 'thay webcam', wifi: 'thay card Wi-Fi',
+  lcase: 'thay vỏ', lboard: 'sửa bo mạch', gpu: 'sửa card đồ hoạ'
 };
 
 // Luật tiền cho từng mục.
@@ -146,9 +163,32 @@ const MONEY = {
   'cm.laperture': { axis: 'fn', fix: { lens: 1 }, p: 0.04, lv: { major: { rf: 0.3 }, bad: { rf: 0.6 } } },
   'cm.lmech': { axis: 'fn', fix: { lens: 0.6 }, p: 0.05 },
   'cm.box': { axis: 'extra', lv: { ok: { adj: 0.02 }, major: { adj: -0.03 } } },
-  'cm.warranty': { axis: 'extra', lv: { ok: { adj: 0.05 }, minor: { adj: 0.02 } } }
+  'cm.warranty': { axis: 'extra', lv: { ok: { adj: 0.05 }, minor: { adj: 0.02 } } },
+
+  // --- Laptop ---
+  'lp.mdm': { axis: 'gate', lv: { doubt: { adj: -0.03 } } },
+  'lp.tag': { axis: 'info', lv: { minor: { adj: -0.02 }, major: { adj: -0.15 } } },
+  'lp.spec': { axis: 'info', lv: { minor: { adj: -0.08 }, major: { adj: -0.3 } } },
+  'lp.windows': { axis: 'info', lv: { minor: { adj: -0.03 } } },
+  'lp.battery': { axis: 'fn', fix: 'lbatt', p: 0.35, lv: { b70: { rf: 0.3, fault: false }, b50: { rf: 0.8, fault: false }, low: { rf: 1 }, swollen: { rf: 1.1 } } },
+  'lp.charger': { axis: 'fn', fix: 'charger', p: 0.08 },
+  'lp.display': { axis: 'fn', fix: 'lscreen', p: 0.08, lv: { minor: { rf: 0.15, fault: false }, major: { rf: 0.9 }, bad: { rf: 1 } } },
+  'lp.hinge': { axis: 'fn', fix: 'hinge', p: 0.06, lv: { minor: { rf: 0.3, fault: false }, major: { rf: 1 } } },
+  'lp.keyboard': { axis: 'fn', fix: 'keyboard', p: 0.06, lv: { minor: { rf: 0, fault: false }, major: { rf: 1 }, bad: { rf: 1 } } },
+  'lp.touchpad': { axis: 'fn', fix: 'touchpad', p: 0.04 },
+  'lp.stress': { axis: 'fn', fix: 'fan', p: 0.2, lv: { minor: { rf: 1, fault: false }, major: { rf: 2 }, bad: { rf: 1, fix: 'lboard' } } },
+  'lp.ssd': { axis: 'fn', fix: 'ssd', p: 0.06, lv: { minor: { rf: 0.3, fault: false }, major: { rf: 1 }, bad: { rf: 1 } } },
+  'lp.gpu': { axis: 'fn', fix: 'gpu', p: 0.04 },
+  'lp.ports': { axis: 'fn', fix: 'lports', p: 0.05 },
+  'lp.wifi': { axis: 'fn', fix: 'wifi', p: 0.03 },
+  'lp.av': { axis: 'fn', fix: 'lspeaker', p: 0.05 },
+  'lp.body': { axis: 'cos', fix: 'lcase', lv: { bad: { rf: 1 } } },
+  'lp.opened': { axis: 'info', lv: { minor: { adj: -0.02 }, major: { adj: -0.25 } } },
+  'lp.box': { axis: 'extra', lv: { ok: { adj: 0.02 }, major: { adj: -0.03 } } },
+  'lp.warranty': { axis: 'extra', lv: { ok: { adj: 0.05 }, minor: { adj: 0.02 } } }
 };
 
 PHONE.repairUSD = phoneRepairUSD;
 HEADPHONES.repairUSD = headphoneRepairUSD;
 CAMERA.repairUSD = cameraRepairUSD;
+LAPTOP.repairUSD = laptopRepairUSD;

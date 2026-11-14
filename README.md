@@ -2,7 +2,7 @@
 
 Web app tiếng Việt cho người **mua** đồ điện tử cũ gặp trực tiếp người bán (chợ đồ cũ, Avito, Chợ Tốt). Chọn máy, app sinh đúng danh sách cần kiểm cho đời máy đó; kiểm xong từng mục thì ra **điểm trên 100**, **giá hợp lý** và câu trả lời **mua / trả giá / bỏ**, kèm giá trả mở đầu, giá tối đa và lời trả giá bằng tiếng Việt và tiếng Nga.
 
-Bản đầu làm ba nhóm: **điện thoại** (iPhone SE 2 → 18 Pro Max, Galaxy S23–S25, Pixel 8–10, Xiaomi), **tai nghe** (AirPods các đời, Sony WF/WH-1000X, Galaxy Buds, Bose) và **máy ảnh** (Canon, Sony, Nikon, Fujifilm).
+Có bốn nhóm: **điện thoại** (iPhone SE 2 → 18 Pro Max, Galaxy S23–S25, Pixel 8–10, Xiaomi), **laptop** (Dell Precision, Latitude, Vostro, XPS, Inspiron, G và tên mới Dell / Dell Pro / Dell Pro Max từ 2025), **tai nghe** (AirPods các đời, Sony WF/WH-1000X, Galaxy Buds, Bose) và **máy ảnh** (Canon, Sony, Nikon, Fujifilm). Có bản APK cho Android.
 
 ## Cách app chấm và định giá
 
@@ -26,6 +26,17 @@ Bản đầu làm ba nhóm: **điện thoại** (iPhone SE 2 → 18 Pro Max, Gal
 
 Nhập nhiều mã cách nhau bằng dấu cách để **so chéo**: số model Samsung bản Hàn mà phần mềm bản Nga, hoặc Xiaomi bản C mà chạy ROM Global, đều bị cảnh báo là phần mềm đã bị cài lại. Trong phiếu, nếu mã không khớp đời máy đã chọn (vd. chọn S24 Ultra mà mã là S918), app báo đỏ ngay dưới ô nhập. Bảng mã do cộng đồng tổng hợp (TheAppleWiki, AndroidSage, miuirom.org), hãng không công bố đầy đủ.
 
+## Tra tên laptop Dell ra cấu hình
+
+Ở trang đầu, mục **Tra nhanh › Tên laptop Dell → cấu hình**. Gõ tên in dưới đáy máy hoặc trên tin rao ("Precision 5560", "Latitude 7420", "XPS 15 9510", "G15 5520", "Pro Max 16 Plus", mã "PB14250"), app:
+
+- **tách từng chữ số ra nghĩa** thành các ô: dòng máy, hạng (3 / 5 / 7 / 9), cỡ màn, đời (năm), biến thể (Intel, AMD, chip H…);
+- cho **cấu hình** (CPU, card, RAM, ổ, màn, nặng, pin), **tháng năm ra mắt**, **giá khởi điểm ở Mỹ** lúc ra mắt (kèm quy ra tiền Việt theo tỷ giá trong Cài đặt) và **khoảng giá máy cũ ở Việt Nam** (cửa hàng, ngày xem, link);
+- gợi ý **đời trước, đời sau, cùng đời khác cỡ**; số trùng nhiều dòng (5420 có cả Latitude và Inspiron) thì hỏi lại dòng;
+- đời chưa có trong bảng vẫn đọc theo quy tắc, ghi rõ "≈ năm" là đoán.
+
+Bấm **Kiểm máy này** để mở phiếu laptop: Service Tag (có link tra bảo hành, cấu hình gốc trên trang Dell), khoá BIOS, máy công ty còn quản lý từ xa (MDM / Computrace), độ chai pin, bản lề, bàn phím, màn, chạy nặng, cổng, Wi-Fi, loa… Công cụ riêng: **đọc battery report** (`powercfg /batteryreport` trên Windows: dung lượng thiết kế, sạc đầy, số lần sạc, đúng máy hay không) và **thử bàn phím** (bấm từng phím, phím nào chết thì không sáng). Giá tham chiếu của phiếu lấy giữa khoảng giá cũ ở Việt Nam khi chưa dán tin rao. Bảng số liệu ở `tests/dell-data/*.json`, sinh ra `src/data-dell.js` bằng `python3 tools/make_dell_data.py`.
+
 ## Công cụ có sẵn
 
 Thử màn hình theo màu, thử cảm ứng phủ ô, loa trái/phải và quét tần số, ghi âm thử micro, tiếng ồn để thử chống ồn, cảm biến và rung, xem từng camera, trạng thái sạc (Android), tính độ chai pin tai nghe sau 20 phút nghe, đối chiếu số model AirPods, đọc ảnh máy ảnh (EXIF/MakerNote), tìm bụi cảm biến từ ảnh tường trắng, tìm điểm nóng và hàng/cột chết từ ảnh đậy nắp, **đọc độ khoẻ pin máy Samsung** (ASOC/BSOH, số vòng sạc) từ tệp nhật ký `*#9900#`: chọn tệp `dumpState_….zip` là app tự giải nén và dò ngay trên máy, khoảng một giây, đồng thời cảnh báo nếu nhật ký là của máy khác model trong phiếu.
@@ -38,13 +49,15 @@ Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu 
 |---|---|
 | `index.html`, `manifest.webmanifest`, `sw.js`, `icons/` | Trang web đã build (GitHub Pages phục vụ trực tiếp) |
 | `src/data-common.js` | Mức chấm, hạng, hệ số ngoại hình, khấu hao, tiền tệ, ngưỡng kết luận |
-| `src/data-phone.js`, `data-headphones.js`, `data-camera.js` | Danh mục máy và các mục kiểm theo từng loại |
+| `src/data-phone.js`, `data-laptop.js`, `data-headphones.js`, `data-camera.js` | Danh mục máy và các mục kiểm theo từng loại |
+| `src/data-dell.js`, `src/dell.js` | Bảng đời máy Dell (sinh từ `tests/dell-data/`) và bộ đọc tên máy Dell |
 | `src/data-money.js` | Bảng chi phí sửa theo bộ phận và luật trừ tiền cho từng mục |
 | `src/decode.js` | Giải mã số máy Apple, mã máy Samsung/Xiaomi/Oppo/vivo/Honor ra thị trường, IMEI, số model AirPods, EXIF/MakerNote máy ảnh, đọc ZIP và dò pin trong nhật ký Samsung |
 | `src/engine.js` | Chấm điểm, định giá, kết luận, báo cáo (không dùng DOM, chạy được trong Node) |
 | `src/tools.js`, `src/ui.js`, `src/app.js` | Công cụ kiểm, giao diện, xử lý thao tác |
 | `src/styles.css`, `src/shell.html` | Giao diện, biểu tượng |
 | `build.py` | Gộp mọi thứ thành 1 tệp HTML có nhúng font (`dist/` và thư mục gốc) |
+| `android/` | Vỏ Android (WebView) và `build_apk.sh` đóng gói APK không cần Gradle |
 | `tests/` | Kiểm thử lõi, ảnh mẫu EXIF, kiểm thử giao diện bằng Playwright |
 
 ## Đưa lên GitHub Pages
@@ -53,14 +66,32 @@ Mọi thứ chạy trên máy, không gửi dữ liệu đi đâu. Phiếu lưu 
 2. Trên GitHub: **Settings → Pages → Source: GitHub Actions**. Workflow `.github/workflows/pages.yml` tự triển khai mỗi lần push lên `main`.
 3. Địa chỉ: `https://quanbughunter.github.io/mua-do-cu/`. Mở trên điện thoại, chọn "Thêm vào màn hình chính". Các công cụ cần micro, camera, cảm biến chỉ chạy ở bản web này (HTTPS), không chạy trong khung xem trước của Claude.
 
+## Bản Android (APK)
+
+APK chạy y hệt bản web nhưng offline hoàn toàn, có camera, micro, rung, chọn tệp và nút Back. Trang được nạp qua tên miền ảo `https://appassets.androidplatform.net/` (không ra mạng) để camera và micro chạy được.
+
+**Tải bản mới nhất:** https://github.com/quanbughunter/mua-do-cu/releases/latest/download/SoiDoCu.apk (trong app: Cài đặt › Bản Android › Tải APK mới nhất). Mở file và bấm Cài đặt: bản mới cài đè lên bản cũ, phiếu vẫn giữ.
+
+**Ra bản mới (GitHub build và tạo Release):**
+
+1. Một lần đầu: trên GitHub vào **Settings › Secrets and variables › Actions › New repository secret**, tạo hai secret lấy từ `android/keystore/GITHUB-SECRETS.txt` (chỉ có trên máy, không đưa lên GitHub): `SOIDOCU_KEYSTORE_B64` và `SOIDOCU_KEYSTORE_PASSWORD`.
+2. Mỗi lần cập nhật: sửa `VERSION` trong `build.py` (vd. `0.4.1`), commit và push. Workflow **Build APK** tự chạy, build, ký bằng khoá cũ và tạo Release `v0.4.1` có `SoiDoCu-0.4.1.apk` và `SoiDoCu.apk`. Push mà không đổi `VERSION` thì không build.
+3. Muốn build lại cùng số phiên bản (vd. sửa lỗi nhỏ): tab **Actions › Build APK › Run workflow**, Release cũ được thay file mới.
+
+`versionCode` = MAJOR×10000 + MINOR×100 + PATCH (0.4.1 → 401), luôn tăng theo phiên bản. **Giữ khoá ký** `android/keystore/soi-do-cu-release.jks` và `PASSWORD.txt`: mất khoá thì bản sau không cài đè được, phải gỡ app (mất phiếu).
+
+Build trên máy Linux / WSL (không bắt buộc): `sudo apt install aapt apksigner zipalign android-sdk-platform-23 dalvik-exchange`, rồi `python3 build.py && ./android/build_apk.sh` → `android/out/SoiDoCu-<phiên bản>.apk`.
+
 ## Sửa và build lại
 
 ```bash
 python3 build.py            # tạo dist/ và cập nhật index.html, sw.js, manifest ở thư mục gốc
-node tests/run.js           # 157 kiểm thử lõi: IMEI, số máy, mã máy theo hãng, tiền, chấm điểm, định giá, EXIF, pin Galaxy
+node tests/run.js           # kiểm thử lõi: IMEI, số máy, mã máy theo hãng, tên laptop Dell, tiền, chấm điểm, định giá, EXIF, pin Galaxy
 node tests/ui-smoke.js      # chụp màn hình 390px sáng/tối (cần Playwright)
 node tests/market-smoke.js  # thử Tra nhanh mã máy, IMEI và ô mã máy trong phiếu Samsung/Xiaomi
 node tests/tool-smoke.js    # chạy thử công cụ đọc ảnh, bụi, điểm nóng, pin tai nghe
+node tests/dell-smoke.js    # tra tên Dell, phiếu laptop, battery report, thử bàn phím, nút Back
+python3 tools/make_dell_data.py  # sinh lại src/data-dell.js sau khi sửa tests/dell-data/*.json
 python3 tests/make_fixtures.py   # tạo lại ảnh JPEG mẫu (Canon, Sony, Nikon Z, Fujifilm) và nhật ký Samsung mẫu
 ```
 

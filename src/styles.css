@@ -318,3 +318,38 @@ textarea.inp { resize: vertical; min-height: 92px; }
 .where summary { cursor: pointer; font-weight: 600; font-size: 14px; }
 .where[open] summary { margin-bottom: 10px; }
 .kv dd.txt { font-family: inherit; font-size: 13.5px; }
+
+/* ---------- Tên laptop Dell ---------- */
+.dl-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.dl-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dl-head h3 { font: 700 21px/1.2 var(--f-display); letter-spacing: .01em; margin: 2px 0 0; }
+.dl-head .eyebrow { font-size: 11.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+.dl-year { font: 700 26px/1 var(--f-display); color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dl-year.approx { color: var(--muted); }
+.dl-anat { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+.dl-t { background: var(--sunk); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dl-t b { font-size: 26px; line-height: 1.05; color: var(--ink); }
+.dl-t.word b { font: 700 18px/1.3 var(--f-display); text-transform: uppercase; letter-spacing: .02em; }
+.dl-t .lbl { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.dl-t span:last-child { font-size: 12.5px; line-height: 1.35; color: var(--muted); overflow-wrap: anywhere; }
+.dl-spec dd { overflow-wrap: anywhere; }
+.dl-prices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dl-price { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dl-price .lbl { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.dl-price b { font: 700 19px/1.2 var(--f-display); }
+@media (max-width: 480px) { .dl-prices { grid-template-columns: minmax(0, 1fr); } }
+.dl-nb { display: flex; flex-direction: column; gap: 6px; }
+.dl-nb .lbl { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.dl-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.dl-rules dd .dl-ex { display: block; margin-top: 3px; }
+.dl-mini { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 10px; }
+pre.cmd { background: var(--sunk); border-radius: 8px; padding: 10px 12px; margin: 0; font-size: 14px; overflow-x: auto; }
+
+/* ---------- Thử bàn phím ---------- */
+.kb-wrap { overflow-x: auto; }
+.kb { display: flex; flex-direction: column; gap: 5px; min-width: 620px; }
+.kb-r { display: flex; gap: 5px; }
+.kb-k { flex: 1; min-width: 0; text-align: center; padding: 9px 2px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); font-size: 12px; color: var(--muted); }
+.kb-k.on { background: var(--accent); border-color: var(--accent); color: var(--surface); font-weight: 600; }
+.kb-st { margin: 0; font-size: 14px; }
+.dl-spec dd { font-family: inherit; overflow-wrap: anywhere; }

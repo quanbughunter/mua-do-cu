@@ -64,6 +64,7 @@ function refreshLive(kind) {
   const insp = cur(); if (!insp) return;
   const sc = scoreInspection(insp), v = valuate(insp, S.settings, sc), c = sc.ctx;
   const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  if (kind === 'tag') set('d-tag', tagHTML((insp.info.tag || '').toUpperCase(), c));
   if (kind === 'partno') set('d-partno', c.brand === 'apple' ? decodePartHTML(c) : codesHTML(c.codes, c.model));
   if (kind === 'imei') set('d-imei', decodeImeiHTML(insp.info.imei));
   if (kind === 'price') { set('d-comps', compsHTML(insp)); set('d-ref', refHTML(insp, c)); }
@@ -87,6 +88,8 @@ function copyText(text) {
     ta.remove();
     if (ok) toast('Đã sao chép'); else showText(text);
   };
+  const bridge = window.SoiDoCuAndroid;
+  if (bridge && bridge.copy) { try { bridge.copy(text); toast('Đã sao chép'); return; } catch (e) {} }
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast('Đã sao chép'), fallback);
   else fallback();
 }
@@ -177,7 +180,32 @@ document.addEventListener('click', e => {
       const q = b.dataset.q;
       S.ui.layer = 'quick'; S.ui.quick = q;
       $layer.innerHTML = renderQuick(q, S.ui.quickVal[q] || '');
-      setTimeout(() => { const f = document.getElementById(q === 'market' ? 'q-code' : 'q-imei'); if (f) f.focus(); }, 30);
+      setTimeout(() => { const f = document.getElementById(q === 'market' ? 'q-code' : q === 'dell' ? 'q-dell' : 'q-imei'); if (f) f.focus(); }, 30);
+      break;
+    }
+    case 'dellpick': {
+      const f = document.getElementById('q-dell') || document.getElementById('t-dell');
+      if (f) {
+        f.value = b.dataset.v;
+        if (f.id === 'q-dell') { S.ui.quickVal.dell = f.value; document.getElementById('q-out').innerHTML = quickDellOut(f.value); }
+        else document.getElementById('t-dell-out').innerHTML = dellResultHTML(decodeDell(f.value), { inInsp: true });
+        f.scrollIntoView({ block: 'nearest' });
+      }
+      break;
+    }
+    case 'dellset': {
+      if (!insp) break;
+      insp.model = b.dataset.model; touch(insp);
+      toast('Đã chọn ' + (getModel(getCategory('laptop'), insp.model) || {}).name);
+      closeLayer();
+      break;
+    }
+    case 'newwith': {
+      const n = newInspection(b.dataset.cat, b.dataset.model);
+      S.list.push(n); save();
+      stopLive(); S.ui.layer = null; $layer.innerHTML = '';
+      Object.assign(S.ui, { view: 'insp', id: n.id, tab: 'info', open: {}, confirmDel: null });
+      render(); window.scrollTo(0, 0);
       break;
     }
     case 'qex': {
@@ -208,11 +236,11 @@ document.addEventListener('click', e => {
 
 document.addEventListener('input', e => {
   const t = e.target;
-  if (t.id === 'q-code' || t.id === 'q-imei') {
-    const q = t.id === 'q-code' ? 'market' : 'imei';
+  if (t.id === 'q-code' || t.id === 'q-imei' || t.id === 'q-dell') {
+    const q = t.id === 'q-code' ? 'market' : t.id === 'q-dell' ? 'dell' : 'imei';
     S.ui.quickVal[q] = t.value;
     const out = document.getElementById('q-out');
-    if (out) out.innerHTML = q === 'market' ? quickMarketOut(t.value) : quickImeiOut(t.value);
+    if (out) out.innerHTML = q === 'market' ? quickMarketOut(t.value) : q === 'dell' ? quickDellOut(t.value) : quickImeiOut(t.value);
     return;
   }
   const insp = cur();
@@ -221,7 +249,7 @@ document.addEventListener('input', e => {
     if (path === 'model') return;
     const k = path.split('.')[1];
     let val = t.value;
-    if (k === 'partno' || k === 'code2') val = val.toUpperCase();
+    if (k === 'partno' || k === 'code2' || k === 'tag') val = val.toUpperCase();
     insp.info[k] = val;
     touch(insp);
     refreshLive(t.dataset.live);
@@ -259,6 +287,13 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && S.ui.layer) closeLayer();
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.cost) { const b = document.querySelector('[data-act="savecost"][data-id="' + e.target.dataset.cost + '"]'); if (b) b.click(); }
 });
+
+// Nút Back của Android (vỏ APK gọi window.__back): đóng lớp phủ → về trang chủ → thoát app
+window.__back = function () {
+  if (S.ui.layer) { closeLayer(); return true; }
+  if (S.ui.view !== 'home') { S.ui.view = 'home'; S.ui.id = null; render(); window.scrollTo(0, 0); return true; }
+  return false;
+};
 
 render();
 if (IS_PWA && 'serviceWorker' in navigator && location.protocol === 'https:') {

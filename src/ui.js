@@ -89,9 +89,9 @@ function renderTicket(sc, v) {
 // ---------- Tab Thông tin ----------
 function modelSelect(insp, c) {
   const groups = {};
-  c.cat.models.forEach(m => { (groups[m.brand] = groups[m.brand] || []).push(m); });
+  c.cat.models.forEach(m => { const g = m.group || BRAND_NAMES[m.brand] || m.brand; (groups[g] = groups[g] || []).push(m); });
   return '<div class="field"><label for="f-model">Máy cần kiểm</label><select class="inp" id="f-model" data-f="model"><option value="">— Chọn model —</option>' +
-    Object.keys(groups).map(b => '<optgroup label="' + (BRAND_NAMES[b] || b) + '">' + groups[b].map(m => '<option value="' + m.id + '"' + (m.id === insp.model ? ' selected' : '') + '>' + esc(m.name) + (m.year ? ' (' + m.year + ')' : '') + '</option>').join('') + '</optgroup>').join('') +
+    Object.keys(groups).map(b => '<optgroup label="' + esc(b) + '">' + groups[b].map(m => '<option value="' + m.id + '"' + (m.id === insp.model ? ' selected' : '') + '>' + esc(m.name) + (m.year ? ' (' + m.year + ')' : '') + '</option>').join('') + '</optgroup>').join('') +
     '</select></div>';
 }
 
@@ -119,7 +119,8 @@ const CODE_WHERE = [
 ];
 const QUICK = {
   market: { name: 'Mã máy → bản nước nào', sub: 'iPhone, Samsung, Xiaomi, Oppo, vivo, Honor', icon: 'globe' },
-  imei: { name: 'Kiểm tra IMEI', sub: 'Đủ 15 số, đúng chữ số cuối', icon: 'hash' }
+  imei: { name: 'Kiểm tra IMEI', sub: 'Đủ 15 số, đúng chữ số cuối', icon: 'hash' },
+  dell: { name: 'Tên laptop Dell → cấu hình', sub: 'Năm, cấu hình, giá ra mắt, giá cũ ở Việt Nam', icon: 'laptop' }
 };
 const toneCls = t => (t === 'pass' || t === 'warn' || t === 'stop' ? t : 'info');
 
@@ -176,7 +177,109 @@ function quickImeiOut(val) {
 function renderQuick(name, val) {
   const q = QUICK[name];
   return '<div class="sheet"><header class="appbar"><div class="wrap row"><button class="iconbtn" data-act="closelayer" aria-label="Đóng">' + icon('x') + '</button><div class="ttl"><h1>' + esc(q.name) + '</h1><div class="sub">' + esc(q.sub) + '</div></div></div></header>' +
-    '<div class="wrap body">' + (name === 'market' ? quickMarketHTML(val) : quickImeiHTML(val)) + '</div></div>';
+    '<div class="wrap body">' + (name === 'market' ? quickMarketHTML(val) : name === 'dell' ? quickDellHTML(val) : quickImeiHTML(val)) + '</div></div>';
+}
+
+// ---------- Tên laptop Dell ----------
+const DELL_EXAMPLES = ['Precision 5560', 'Latitude 7420', 'XPS 15 9510', 'Inspiron 7620', 'G15 5520', 'Vostro 3510', 'Pro Max 16 Plus', '5420'];
+
+function usdHint(usd) {
+  const s = S.settings, vnd = usd * s.usdRub * s.rubVnd;
+  const cur = CURRENCIES[s.currency];
+  const local = s.currency === 'USD' ? '' : s.currency === 'VND' ? '' : ' · ' + fmtMoney(usd * usdTo(s.currency, s), s.currency, cur.locale);
+  return '≈ ' + (Math.round(vnd / 100000) / 10).toLocaleString('vi-VN') + ' tr ₫' + local;
+}
+
+function dellSpecHTML(m) {
+  const rows = [
+    ['Ra mắt', m.launch ? m.launch.replace(/^(\d{4})-(\d{2}).*/, '$2/$1') : m.year],
+    ['CPU', m.cpu], ['Card đồ hoạ', m.gpu], ['RAM', m.ram], ['Ổ cứng', m.storage], ['Màn hình', m.display],
+    ['Nặng', m.weight ? String(m.weight).replace('.', ',') + ' kg' : ''], ['Pin', m.battery ? m.battery + ' Wh' : ''], ['Sạc', m.charger]
+  ].filter(r => r[1]);
+  return '<dl class="kv dl-spec">' + rows.map(r => '<dt>' + r[0] + '</dt><dd>' + esc(String(r[1])) + '</dd>').join('') + '</dl>';
+}
+
+function dellPriceHTML(m) {
+  let h = '<div class="dl-prices">';
+  h += '<div class="dl-price"><span class="lbl">Giá khởi điểm ở Mỹ lúc ra mắt</span>' +
+    (m.usd ? '<b class="num">' + m.usd.toLocaleString('en-US') + ' USD</b><span class="small muted">' + esc(usdHint(m.usd)) + (m.usdSrc ? ' · <a href="' + esc(m.usdSrc) + '" target="_blank" rel="noopener">nguồn</a>' : '') + '</span>' + (m.usdNote ? '<span class="small muted">' + esc(m.usdNote) + '</span>' : '') : '<b class="muted">Chưa rõ</b><span class="small muted">Không tìm được nguồn ghi giá</span>') + '</div>';
+  h += '<div class="dl-price"><span class="lbl">Máy cũ ở Việt Nam</span>' +
+    (m.vnd && m.vnd[0] ? '<b class="num">' + esc(fmtVndRange(m.vnd)) + '</b><span class="small muted">' + esc((m.vndNote ? m.vndNote + ' · ' : '') + (m.vndSeen || '')) + (m.vndSrc ? ' · <a href="' + esc(m.vndSrc) + '" target="_blank" rel="noopener">' + esc(m.vndShop || 'nguồn') + '</a>' : '') + '</span>' : '<b class="muted">Chưa có số liệu</b><span class="small muted">Bấm tìm trên Chợ Tốt bên dưới</span>') + '</div>';
+  return h + '</div>';
+}
+
+function dellResultHTML(res, opts) {
+  opts = opts || {};
+  if (!res) return '';
+  if (!res.ok) return '<div class="note tone-warn">' + esc(res.msg) + '</div>';
+  if (res.kind === 'ambiguous') {
+    return '<div class="note tone-info">' + esc(res.msg) + '</div><div class="dl-pick">' + res.models.map(m => '<button class="chiplink" data-act="dellpick" data-v="' + esc(m.name) + '">' + esc(m.name) + ' · ' + m.year + '</button>').join('') + '</div>';
+  }
+  const m = res.models[0] || null;
+  let h = '<article class="dl-card">';
+  h += '<div class="dl-head"><div><span class="eyebrow">' + esc(res.lineKind || 'Dell, tên mới từ 2025') + '</span><h3>' + esc(res.title) + '</h3></div>' +
+    (res.year ? '<span class="dl-year' + (res.approx ? ' approx' : '') + '">' + (res.approx ? '≈ ' : '') + res.year + '</span>' : '') + '</div>';
+  h += '<div class="dl-anat" aria-label="Giải nghĩa tên máy">' + (res.lineName ? '<div class="dl-t word"><b>' + esc(res.lineName) + '</b><span class="lbl">Dòng</span><span>' + esc(res.lineShort || res.lineKind) + '</span></div>' : '') +
+    res.parts.map(p => '<div class="dl-t"><b class="mono">' + esc(p.ch) + '</b><span class="lbl">' + esc(p.label) + '</span><span>' + esc(p.text) + '</span></div>').join('') + '</div>';
+  if (res.approx) h += '<div class="note tone-warn">Đời này chưa có trong bảng: năm và đời chip dưới đây đoán theo quy tắc đặt tên, có thể lệch.</div>';
+  if (res.warn) h += '<div class="note tone-warn">' + esc(res.warn) + '</div>';
+  if (m) {
+    if (m.note) h += '<div class="note tone-info">' + esc(m.note) + '</div>';
+    h += dellSpecHTML(m) + dellPriceHTML(m);
+    const nb = dellNeighbors(m);
+    const chips = [];
+    if (nb.prev) chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(nb.prev.name) + '">← Đời trước: ' + esc(nb.prev.code) + ' · ' + nb.prev.year + '</button>');
+    if (nb.next) chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(nb.next.name) + '">Đời sau: ' + esc(nb.next.code) + ' · ' + nb.next.year + ' →</button>');
+    nb.same.forEach(x => chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(x.name) + '">' + esc(x.name.replace(/^Dell /, '')) + (x.size ? ' · ' + esc(x.size) : '') + '</button>'));
+    if (chips.length) h += '<div class="dl-nb"><span class="lbl">Cùng họ</span><div class="dl-pick">' + chips.join('') + '</div></div>';
+  } else {
+    h += '<dl class="kv dl-spec">' + [['Năm', res.year ? '≈ ' + res.year : 'Chưa rõ'], ['Chip', res.cpu || '—'], ['Cỡ màn', res.size || '—']].map(r => '<dt>' + r[0] + '</dt><dd>' + esc(String(r[1])) + '</dd>').join('') + '</dl>';
+  }
+  const q = m ? m.name : res.title;
+  h += '<div class="links"><a class="chiplink" href="https://www.chotot.com/mua-ban?q=' + encodeURIComponent(q) + '" target="_blank" rel="noopener">Tìm trên Chợ Tốt' + icon('ext', 'sm') + '</a>' +
+    '<a class="chiplink" href="https://www.google.com/search?q=' + encodeURIComponent(q + ' specs') + '" target="_blank" rel="noopener">Thông số đầy đủ' + icon('ext', 'sm') + '</a></div>';
+  if (m) h += '<div class="btnrow">' + (opts.inInsp
+    ? '<button class="btn primary" data-act="dellset" data-model="' + m.id + '">Chọn đời này cho phiếu</button>'
+    : '<button class="btn primary" data-act="newwith" data-cat="laptop" data-model="' + m.id + '">Kiểm máy này ' + icon('chev', 'sm') + '</button>') + '</div>';
+  else if (!opts.inInsp) h += '<div class="btnrow"><button class="btn" data-act="newwith" data-cat="laptop" data-model="lp-dell-other">Kiểm máy này (chưa có trong bảng) ' + icon('chev', 'sm') + '</button></div>';
+  return h + '</article>';
+}
+
+const DELL_RULES = [
+  ['Precision', 'Máy trạm. 4 số: hạng (3 rẻ nhất, 5 mỏng nhẹ vỏ nhôm, 7 mạnh và dễ nâng cấp) · cỡ màn (4 = 14″, 5 = 15,6″, 6 = 16″, 7 = 17,3″) · đời (1 = 2016, 3 = 2018 … 9 = 2024) · số cuối 0 là bản thường, 1 (chỉ dòng 3000, vd. 3561) là cùng vỏ nhưng chip H và card NVIDIA mạnh hơn. Bản 5000 dùng chung vỏ với XPS 15/17 cùng năm.', 'Precision 5560 = mỏng nhẹ · 15,6″ · 2021'],
+  ['Latitude', 'Doanh nghiệp. 4 số: hạng (3, 5, 7, 9) · cỡ màn (2 = 12,5″, 3 = 13,3″, 4 = 14″, 5 = 15,6″, 6 = 16″) · số thứ ba là đời: 8 = 2017, 9 = 2018, 0 = 2019, 1 = 2020 … 5 = 2024 · số cuối 0 là bản thường, 1 là bản chip H/P mạnh hơn, 5 là AMD. Chữ 2-in-1 đứng sau số là máy xoay gập khác. Trước 2017 có chữ E: E7450 (2015) khác hẳn 7450 (2024).', 'Latitude 7420 = cao cấp · 14″ · 2021'],
+  ['Inspiron, Vostro', 'Phổ thông. 4 số: hạng (3, 5, 7) · cỡ màn · đời (7 = 2017 … 0 = 2020, 1 = 2021 … 4 = 2024) · số cuối 0 là Intel, 5 là AMD, 1 là Intel đời khác hoặc Snapdragon. Từ 2021 Dell bỏ số khỏi tên bán (chỉ ghi "Inspiron 16 Plus") nhưng số vẫn in dưới đáy máy. Bản Plus và bản 2-in-1 cùng năm dùng chung số.', 'Inspiron 7620 = cao cấp · 16″ · 2022 · Intel'],
+  ['XPS', 'Cao cấp. 9 · cỡ màn (3 = 13,4″, 4 = 14,5″, 5 = 15,6″, 6 = 16,3″, 7 = 17″) · đời (0 = 2020 … 4 = 2024; riêng XPS 13 lệch, vd. 9310 ra cuối 2020) · số cuối 5 là bản rẻ hơn hoặc chip khác (9305, 9315, 9345 Snapdragon). Đời 2019 bắt đầu bằng 7 (7390, 7590).', 'XPS 15 9510 = 15,6″ · 2021'],
+  ['G15, G16', 'Chơi game. 5 (G15) hoặc 7 (G16) · cỡ màn · đời (1 = 2021, 2 = 2022, 3 = 2023) · số cuối 0 là Intel, 1 là Intel đời khác cùng năm, 5 là AMD. 7620, 7630 vừa là G16 vừa là Inspiron 16 Plus.', 'G15 5520 = 15,6″ · 2022 · Intel'],
+  ['Tên mới từ 2025', 'Dell (thay Inspiron, XPS, Vostro), Dell Pro (thay Latitude), Dell Pro Max (thay Precision) · cỡ màn · hạng Base, Plus, Premium. Mã dưới đáy máy như PB14250: P = Dell Pro, B = Plus (A = Premium, C = Base), 14 = 14″, 25 = 2025, số cuối 0 = Intel, 5 = AMD. Từ 03/2026 có thêm Dell Pro Precision, mã PW (vd. PW514260). Dell không công bố bảng giải mã; quy tắc này suy từ tên máy Dell bán.', 'Dell Pro Max 16 Plus = máy trạm 16″ hạng giữa']
+];
+
+function dellRulesHTML() {
+  return '<details class="panel where"><summary>Cách đọc tên laptop Dell</summary><dl class="kv dl-rules">' +
+    DELL_RULES.map(r => '<dt>' + esc(r[0]) + '</dt><dd class="txt">' + esc(r[1]) + '<span class="small muted dl-ex">' + esc(r[2]) + '</span></dd>').join('') + '</dl>' +
+    (typeof DELL_RULE_SOURCES !== 'undefined' && DELL_RULE_SOURCES.length ? '<p class="small muted">Nguồn đối chiếu: ' + DELL_RULE_SOURCES.map((s, i) => '<a href="' + esc(s.u) + '" target="_blank" rel="noopener" title="' + esc(s.t) + '">' + (i + 1) + '</a>').join(' · ') + '</p>' : '') + '</details>';
+}
+
+function quickDellHTML(val) {
+  return '<p class="how">Gõ tên in dưới đáy máy, trong BIOS hoặc trên tin rao. Ví dụ "Precision 5560": app tách từng chữ số ra nghĩa, rồi cho cấu hình, năm ra mắt, giá ở Mỹ và giá máy cũ ở Việt Nam.</p>' +
+    '<div class="field"><label for="q-dell">Tên hoặc mã máy</label><input class="inp" id="q-dell" autocomplete="off" spellcheck="false" placeholder="Precision 5560" value="' + esc(val || '') + '"></div>' +
+    '<div class="links mk-ex"><span class="small muted">Thử:</span>' + DELL_EXAMPLES.map(e => '<button class="chiplink" data-act="dellpick" data-v="' + esc(e) + '">' + esc(e) + '</button>').join('') + '</div>' +
+    '<div id="q-out">' + quickDellOut(val) + '</div>' + dellRulesHTML() +
+    '<p class="hint">Cấu hình và giá ra mắt lấy từ trang Dell, Notebookcheck và các bài đánh giá; giá máy cũ lấy từ các cửa hàng ở Việt Nam, ghi ngày xem. Mỗi máy cũ có cấu hình riêng, nên đối chiếu Service Tag trên trang Dell.</p>';
+}
+function quickDellOut(val) { return val && val.trim() ? dellResultHTML(decodeDell(val)) : ''; }
+
+function laptopInfoHTML(insp, c) {
+  const I = insp.info, tag = (I.tag || '').toUpperCase();
+  let h = '<div class="field"><label for="f-tag">Service Tag (7 ký tự dưới đáy máy hoặc trong BIOS)</label><input class="inp mono" id="f-tag" data-f="info.tag" data-live="tag" autocapitalize="characters" autocomplete="off" maxlength="7" placeholder="ABC1D23" value="' + esc(I.tag || '') + '"><div id="d-tag">' + tagHTML(tag, c) + '</div></div>';
+  h += '<div class="btnrow"><button class="toolbtn" data-act="tool" data-tool="dellname" data-item="lp.spec">' + icon('tool', 'sm') + 'Tra tên máy Dell ra cấu hình</button><button class="toolbtn" data-act="tool" data-tool="battreport" data-item="lp.battery">' + icon('tool', 'sm') + 'Đọc battery report</button></div>';
+  if (c.model && c.model.code) h += '<div class="dl-mini">' + dellSpecHTML(c.model) + dellPriceHTML(c.model) + '</div>';
+  return h;
+}
+function tagHTML(tag, c) {
+  if (!tag) return '';
+  if (!/^[A-Z0-9]{7}$/.test(tag)) return '<div class="decode tone-warn">Service Tag của Dell có đúng 7 ký tự chữ và số.</div>';
+  return '<div class="links"><a class="chiplink" href="https://www.dell.com/support/home/vi-vn/product-support/servicetag/' + tag + '/overview" target="_blank" rel="noopener">Tra ' + tag + ' trên trang Dell' + icon('ext', 'sm') + '</a></div>';
 }
 
 function decodeImeiHTML(v) {
@@ -194,7 +297,7 @@ function compsHTML(insp) {
 }
 function refHTML(insp, c) {
   const r = referencePrice(insp, c, S.settings);
-  return '<div class="note ' + (r.src === 'estimate' || r.src === 'none' ? 'tone-warn' : 'tone-pass') + '">Giá tham chiếu: <b class="mono">' + (r.value ? moneyOf(r.value) : '—') + '</b>. ' + esc(r.text) + '.</div>';
+  return '<div class="note ' + (r.src === 'estimate' || r.src === 'none' ? 'tone-warn' : r.src === 'vnd' ? 'tone-info' : 'tone-pass') + '">Giá tham chiếu: <b class="mono">' + (r.value ? moneyOf(r.value) : '—') + '</b>. ' + esc(r.text) + '.</div>';
 }
 
 function renderInfo(insp, sc, v) {
@@ -208,6 +311,7 @@ function renderInfo(insp, sc, v) {
   if (f.includes('storage')) h += '<div class="field"><label for="f-storage">Dung lượng</label><select class="inp" id="f-storage" data-f="info.storage"><option value="">—</option>' + STORAGES.map(s => '<option' + (I.storage === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div>';
   if (f.includes('partno') && c.brand !== 'apple' && c.model) h += codeFieldHTML(c);
   if (f.includes('partno') && c.brand === 'apple') h += '<div class="field"><label for="f-partno">Số máy (Cài đặt › Cài đặt chung › Giới thiệu)</label><input class="inp mono" id="f-partno" data-f="info.partno" data-live="partno" autocapitalize="characters" autocomplete="off" placeholder="MFYN4ZA/A" value="' + esc(I.partno || '') + '"><div id="d-partno">' + decodePartHTML(c) + '</div></div>';
+  if (cat.id === 'laptop') h += laptopInfoHTML(insp, c);
   if (f.includes('imei')) h += '<div class="field"><label for="f-imei">IMEI (bấm *#06#)</label><input class="inp mono" id="f-imei" data-f="info.imei" data-live="imei" inputmode="numeric" autocomplete="off" placeholder="15 chữ số" value="' + esc(I.imei || '') + '"><div id="d-imei">' + decodeImeiHTML(I.imei) + '</div></div>';
   if (f.includes('serial')) h += '<div class="field"><label for="f-serial">Số sê-ri</label><input class="inp mono" id="f-serial" data-f="info.serial" autocapitalize="characters" autocomplete="off" value="' + esc(I.serial || '') + '"></div>';
   if (f.includes('lens')) h += '<div class="grid2 tight"><div class="field"><label for="f-lens">Ống kính bán kèm</label><input class="inp" id="f-lens" data-f="info.lens" placeholder="vd. RF-S 18-45mm" value="' + esc(I.lens || '') + '"></div><div class="field"><label for="f-lensv">Giá ống kính đó (nếu biết)</label><input class="inp mono" id="f-lensv" data-f="info.lensValue" inputmode="decimal" value="' + esc(I.lensValue || '') + '"></div></div>';
@@ -422,6 +526,9 @@ const PART_RU = {
 };
 
 // ---------- Cài đặt ----------
+const APK_RELEASES = 'https://github.com/quanbughunter/mua-do-cu/releases';
+const APK_LATEST = APK_RELEASES + '/latest/download/SoiDoCu.apk';
+
 function renderSettings() {
   const s = S.settings;
   const num = (id, label, val, hint, step) => '<div class="field"><label for="' + id + '">' + label + '</label><input class="inp mono" type="number" id="' + id + '" data-set="' + id.slice(2) + '" value="' + val + '" step="' + (step || 'any') + '" inputmode="decimal">' + (hint ? '<span class="hint">' + hint + '</span>' : '') + '</div>';
@@ -440,5 +547,6 @@ function renderSettings() {
     '<div class="btnrow"><button class="btn" data-act="exportdata">' + icon('copy', 'sm') + 'Sao chép toàn bộ phiếu</button></div>' +
     '<div class="field"><label for="s-import">Dán dữ liệu đã sao chép</label><textarea class="inp mono" id="s-import" rows="3"></textarea></div><div class="btnrow"><button class="btn" data-act="importdata">Nhập</button></div>' +
     (S.ui.confirmWipe ? '<div class="confirm"><span>Xoá hết mọi phiếu?</span><button class="btn danger" data-act="wipe">Xoá hết</button><button class="btn" data-act="cancelwipe">Thôi</button></div>' : '<div><button class="linkbtn muted" data-act="askwipe">' + icon('trash', 'sm') + 'Xoá mọi phiếu</button></div>') +
-    '</section><p class="hint">Soi Đồ Cũ ' + APP_VERSION + '. Bảng giá sửa, độ bền màn trập, mức khấu hao là ước lượng từ nguồn công khai, sửa được; app không thay cho thợ kiểm chuyên nghiệp.</p></div></div>';
+    '</section>' + (window.SoiDoCuAndroid ? '<section class="panel"><h3>Bản Android</h3><p class="hint">Đang dùng bản ' + APP_VERSION + '. Tải bản mới nhất từ GitHub rồi mở file để cài đè: phiếu vẫn giữ.</p><div class="links"><a class="chiplink" href="' + APK_LATEST + '" target="_blank" rel="noopener">Tải APK mới nhất' + icon('ext', 'sm') + '</a><a class="chiplink" href="' + APK_RELEASES + '" target="_blank" rel="noopener">Các bản đã phát hành' + icon('ext', 'sm') + '</a></div></section>' : '') +
+    '<p class="hint">Soi Đồ Cũ ' + APP_VERSION + '. Bảng giá sửa, độ bền màn trập, mức khấu hao là ước lượng từ nguồn công khai, sửa được; app không thay cho thợ kiểm chuyên nghiệp.</p></div></div>';
 }

@@ -2,6 +2,7 @@
 """Build Soi Đồ Cũ thành một trang duy nhất, ba bản:
   dist/artifact.html  — Claude artifact (không có khung html/head)
   dist/www/           — GitHub Pages / PWA (index.html + manifest + sw.js + icons)
+  dist/apk-www/       — trang cho vỏ Android (android/build_apk.sh đóng gói thành APK)
 Bản web cũng được chép ra thư mục gốc (index.html, sw.js, manifest.webmanifest) để GitHub Pages phục vụ.
 """
 import base64, json, pathlib, shutil
@@ -10,9 +11,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / 'src'
 DIST = ROOT / 'dist'
 FONTS = ROOT / 'fontsrc'
-VERSION = '0.3.0'
-JS_FILES = ['data-common.js', 'data-phone.js', 'data-headphones.js', 'data-camera.js', 'data-money.js',
-            'decode.js', 'engine.js', 'tools.js', 'ui.js', 'app.js']
+VERSION = '0.4.0'
+JS_FILES = ['data-common.js', 'data-phone.js', 'data-headphones.js', 'data-dell.js', 'data-laptop.js', 'data-camera.js', 'data-money.js',
+            'decode.js', 'dell.js', 'engine.js', 'tools.js', 'ui.js', 'app.js']
 
 RANGES = {
     'latin': 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD',
@@ -48,7 +49,7 @@ def build():
     shell = (SRC / 'shell.html').read_text(encoding='utf-8')
     style = f'<style>\n{font_css()}\n{css}\n</style>'
     DIST.mkdir(exist_ok=True)
-    desc = 'Soi Đồ Cũ — kiểm điện thoại, tai nghe, máy ảnh cũ: chấm điểm 100, ra giá hợp lý theo chi phí sửa, nên mua hay không.'
+    desc = 'Soi Đồ Cũ — kiểm điện thoại, laptop, tai nghe, máy ảnh cũ: chấm điểm 100, ra giá hợp lý theo chi phí sửa, nên mua hay không.'
 
     # 1) artifact: không có khung, <title> và <style> đứng đầu
     (DIST / 'artifact.html').write_text(
@@ -95,7 +96,19 @@ def build():
     (www / '.nojekyll').write_text('')
     for name in ('index.html', 'sw.js', 'manifest.webmanifest'):
         shutil.copy(www / name, ROOT / name)
-    for p in [DIST / 'artifact.html', www / 'index.html']:
+
+    # 3) APK: cùng trang, không manifest / service worker (android/build_apk.sh đóng gói vào assets/www)
+    apk = DIST / 'apk-www'
+    if apk.exists():
+        shutil.rmtree(apk)
+    apk.mkdir(parents=True)
+    apk_head = ('<meta charset="utf-8">\n'
+                '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+                '<title>Soi Đồ Cũ</title>\n')
+    (apk / 'index.html').write_text(
+        f'<!doctype html>\n<html lang="vi">\n<head>\n{apk_head}{style}\n</head>\n<body>\n{shell}\n<script>\n{bundle(False)}\n</script>\n</body>\n</html>\n',
+        encoding='utf-8')
+    for p in [DIST / 'artifact.html', www / 'index.html', apk / 'index.html']:
         print(p.relative_to(ROOT), f'{p.stat().st_size / 1024:.0f} KB')
 
 if __name__ == '__main__':

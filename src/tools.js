@@ -6,7 +6,8 @@ const TOOL_NAMES = {
   noise: 'Tiếng ồn để thử chống ồn', sensors: 'Cảm biến và rung', camera: 'Xem từng camera', battery: 'Trạng thái sạc',
   drain: 'Tính độ chai pin tai nghe', airpods: 'Đối chiếu số model AirPods', exif: 'Đọc ảnh máy ảnh', dust: 'Tìm bụi cảm biến',
   hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Tra mã máy: bản nước nào', imei: 'Kiểm tra IMEI',
-  galaxybatt: 'Đọc pin Galaxy từ *#9900#'
+  galaxybatt: 'Đọc pin Galaxy từ *#9900#', dellname: 'Tên laptop Dell → cấu hình', battreport: 'Đọc battery report của laptop',
+  keyboard: 'Thử bàn phím'
 };
 
 const live = { stream: null, ctx: null, nodes: [], timers: [], rec: null, listeners: [] };
@@ -628,5 +629,96 @@ TOOLS.coverage = (el, api) => {
   el.innerHTML = '<p class="how">Mở trang tra bảo hành của Apple (không phải ô tìm kiếm của Apple Support), nhập số sê-ri. Kết quả phải ra đúng model; ngày mua hợp lệ phải khớp lời người bán.</p>' +
     (api.insp.info.serial ? '<p>Số sê-ri: <b class="mono">' + esc(api.insp.info.serial) + '</b></p>' : '') +
     '<div class="links"><a class="chiplink" href="https://checkcoverage.apple.com/" target="_blank" rel="noopener">checkcoverage.apple.com <svg class="ico sm"><use href="#i-ext"/></svg></a></div>' + levelPicker(api);
+  bindPicker(el, api);
+};
+
+
+// ---------- Tên laptop Dell ----------
+TOOLS.dellname = (el, api) => {
+  const m = api.ctx.model;
+  const start = m && m.code ? m.name.replace(/^Dell /, '') : '';
+  el.innerHTML = '<div class="field"><label for="t-dell">Tên hoặc mã máy</label><input class="inp" id="t-dell" autocomplete="off" spellcheck="false" placeholder="Precision 5560" value="' + esc(start) + '"></div>' +
+    '<div id="t-dell-out">' + (start ? dellResultHTML(decodeDell(start), { inInsp: true }) : '') + '</div>' + dellRulesHTML() + (api.item ? levelPicker(api) : '');
+  const inp = el.querySelector('#t-dell'), out = el.querySelector('#t-dell-out');
+  listen(inp, 'input', () => { out.innerHTML = inp.value.trim() ? dellResultHTML(decodeDell(inp.value), { inInsp: true }) : ''; });
+  if (api.item) bindPicker(el, api);
+};
+
+// ---------- Battery report của Windows ----------
+// powercfg /batteryreport tạo battery-report.html. Đọc bảng "Installed batteries" (DESIGN CAPACITY, FULL CHARGE CAPACITY,
+// CYCLE COUNT) và dòng SYSTEM PRODUCT NAME. Windows tiếng khác dịch nhãn, nên có thêm cách dò theo đơn vị mWh.
+function parseBatteryReport(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const rows = [...doc.querySelectorAll('tr')].map(tr => [...tr.children].map(td => td.textContent.replace(/\s+/g, ' ').trim())).filter(r => r.length >= 2);
+  const find = re => { const r = rows.find(x => re.test(x[0])); return r ? r[1] : null; };
+  const num = v => (v == null ? null : (+String(v).replace(/[^\d]/g, '') || null));
+  let design = num(find(/DESIGN CAPACITY|ПРОЕКТНАЯ|РАСЧЕТНАЯ|РАСЧЁТНАЯ|THIẾT KẾ/i));
+  let full = num(find(/FULL CHARGE CAPACITY|ПОЛН.*ЗАРЯД|SẠC ĐẦY/i));
+  const cycles = num(find(/CYCLE COUNT|ЦИКЛ|CHU KỲ/i));
+  let product = find(/SYSTEM PRODUCT NAME|ПРОДУКТ|SẢN PHẨM/i);
+  const bios = find(/^BIOS$/i);
+  if (!design || !full) {
+    const mwh = rows.filter(r => /\d[\d.,\s\u00a0\u202f]*\s*(mWh|мВт)/i.test(r[1])).map(r => num(r[1]));
+    if (mwh.length >= 2) { design = design || mwh[0]; full = full || mwh[1]; }
+  }
+  if (product) product = product.replace(/^Dell Inc\.?\s*/i, '').trim();
+  const pct = design && full ? Math.round(full / design * 1000) / 10 : null;
+  return { design, full, cycles, product, bios, pct };
+}
+
+TOOLS.battreport = (el, api) => {
+  el.innerHTML = '<p class="how">Trên laptop cần kiểm: bấm Start, gõ cmd, mở Command Prompt rồi gõ</p><pre class="cmd mono">powercfg /batteryreport</pre>' +
+    '<p class="how">Windows lưu tệp battery-report.html vào thư mục người dùng (C:\\Users\\tên). Mở trang này ngay trên laptop đó rồi chọn tệp.</p>' +
+    '<div class="field"><label for="b-f">Tệp battery-report.html</label><input class="inp" type="file" id="b-f" accept=".html,.htm,text/html"></div><div id="b-out" class="stack"></div>' + levelPicker(api);
+  const out = el.querySelector('#b-out');
+  el.querySelector('#b-f').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    let r;
+    try { r = parseBatteryReport(await f.text()); } catch (err) { out.innerHTML = '<div class="note tone-warn">Không đọc được tệp: ' + esc(err.message) + '</div>'; return; }
+    if (!r.pct) { out.innerHTML = '<div class="note tone-warn">Không tìm thấy dung lượng pin trong tệp. Kiểm tra lại đúng tệp battery-report.html, và máy có lắp pin.</div>'; return; }
+    const lv = r.pct >= 85 ? 'ok' : r.pct >= 70 ? 'b70' : r.pct >= 50 ? 'b50' : 'low';
+    const tone = lv === 'ok' ? 'pass' : lv === 'low' ? 'stop' : 'warn';
+    const dec = r.product ? decodeDell(r.product) : null;
+    const dm = r.product ? (dellByName(r.product) || (dec && dec.kind === 'code' && dec.models[0]) || null) : null;
+    let h = '<div class="gb-head"><span class="bignum num">' + String(r.pct).replace('.', ',') + '%</span><span class="pill lv t-' + tone + '">' + esc((api.item.levels.find(x => x.id === lv) || {}).label || '') + '</span></div>' +
+      '<dl class="kv"><dt>Dung lượng thiết kế</dt><dd class="num">' + r.design.toLocaleString('vi-VN') + ' mWh</dd><dt>Sạc đầy hiện tại</dt><dd class="num">' + r.full.toLocaleString('vi-VN') + ' mWh</dd>' +
+      (r.cycles != null ? '<dt>Số lần sạc</dt><dd class="num">' + r.cycles + '</dd>' : '') + (r.product ? '<dt>Máy</dt><dd>' + esc(r.product) + '</dd>' : '') + (r.bios ? '<dt>BIOS</dt><dd>' + esc(r.bios) + '</dd>' : '') + '</dl>';
+    if (dm && api.ctx.model && api.ctx.model.id !== dm.id) h += '<div class="note tone-warn">Tệp ghi máy là ' + esc(dm.name) + ', khác máy đang chọn trong phiếu (' + esc(api.ctx.model.name) + ').</div>';
+    h += '<div class="btnrow"><button class="btn primary" id="b-s">Ghi vào phiếu</button>' + (dm && (!api.ctx.model || api.ctx.model.id !== dm.id) ? '<button class="btn" id="b-m">Chọn đời ' + esc(dm.name.replace(/^Dell /, '')) + '</button>' : '') + '</div>';
+    out.innerHTML = h;
+    el.querySelectorAll('[data-pick]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === lv)));
+    out.querySelector('#b-s').onclick = () => {
+      api.patch(i => { i.inputs.battery = Math.round(r.pct); i.answers[api.item.id] = lv; delete i.na[api.item.id]; i.tools.battreport = r; if (dm && !i.model) i.model = dm.id; });
+      api.toast('Đã ghi pin vào phiếu'); api.close();
+    };
+    const bm = out.querySelector('#b-m');
+    if (bm) bm.onclick = () => { api.patch(i => { i.model = dm.id; }); api.toast('Đã chọn ' + dm.name); bm.remove(); };
+  };
+  bindPicker(el, api);
+};
+
+// ---------- Thử bàn phím ----------
+const KB_ROWS = [
+  [['Escape', 'Esc'], ['F1'], ['F2'], ['F3'], ['F4'], ['F5'], ['F6'], ['F7'], ['F8'], ['F9'], ['F10'], ['F11'], ['F12'], ['Delete', 'Del']],
+  [['Backquote', '`'], ['Digit1', '1'], ['Digit2', '2'], ['Digit3', '3'], ['Digit4', '4'], ['Digit5', '5'], ['Digit6', '6'], ['Digit7', '7'], ['Digit8', '8'], ['Digit9', '9'], ['Digit0', '0'], ['Minus', '-'], ['Equal', '='], ['Backspace', '⌫', 2]],
+  [['Tab', 'Tab', 1.5], ['KeyQ', 'Q'], ['KeyW', 'W'], ['KeyE', 'E'], ['KeyR', 'R'], ['KeyT', 'T'], ['KeyY', 'Y'], ['KeyU', 'U'], ['KeyI', 'I'], ['KeyO', 'O'], ['KeyP', 'P'], ['BracketLeft', '['], ['BracketRight', ']'], ['Backslash', '\\', 1.5]],
+  [['CapsLock', 'Caps', 1.8], ['KeyA', 'A'], ['KeyS', 'S'], ['KeyD', 'D'], ['KeyF', 'F'], ['KeyG', 'G'], ['KeyH', 'H'], ['KeyJ', 'J'], ['KeyK', 'K'], ['KeyL', 'L'], ['Semicolon', ';'], ['Quote', "'"], ['Enter', 'Enter', 2.2]],
+  [['ShiftLeft', 'Shift', 2.4], ['KeyZ', 'Z'], ['KeyX', 'X'], ['KeyC', 'C'], ['KeyV', 'V'], ['KeyB', 'B'], ['KeyN', 'N'], ['KeyM', 'M'], ['Comma', ','], ['Period', '.'], ['Slash', '/'], ['ShiftRight', 'Shift', 2.6]],
+  [['ControlLeft', 'Ctrl', 1.4], ['MetaLeft', 'Win', 1.2], ['AltLeft', 'Alt', 1.2], ['Space', 'Space', 5.4], ['AltRight', 'Alt', 1.2], ['ControlRight', 'Ctrl', 1.2], ['ArrowLeft', '←'], ['ArrowUp', '↑'], ['ArrowDown', '↓'], ['ArrowRight', '→']]
+];
+
+TOOLS.keyboard = (el, api) => {
+  const all = KB_ROWS.flat().map(k => k[0]);
+  const hit = new Set();
+  el.innerHTML = '<p class="how">Mở trang này ngay trên laptop rồi bấm lần lượt từng phím: phím nào nhận sẽ sáng lên. Phím Fn không gửi tín hiệu cho trình duyệt nên không hiện. Một số phím như Win, F11 có thể bị Windows giữ lại.</p>' +
+    '<div class="kb-wrap"><div class="kb">' + KB_ROWS.map(r => '<div class="kb-r">' + r.map(k => '<span class="kb-k" data-code="' + k[0] + '" style="flex:' + (k[2] || 1) + '">' + esc(k[1] || k[0]) + '</span>').join('') + '</div>').join('') + '</div></div>' +
+    '<p class="kb-st"><b id="kb-n" class="num">0</b> / ' + all.length + ' phím <span class="muted small" id="kb-last"></span></p>' + levelPicker(api);
+  const n = el.querySelector('#kb-n'), last = el.querySelector('#kb-last');
+  listen(window, 'keydown', e => {
+    e.preventDefault();
+    const k = el.querySelector('.kb-k[data-code="' + e.code + '"]');
+    last.textContent = '· vừa bấm: ' + (e.key === ' ' ? 'Space' : e.key) + ' (' + e.code + ')';
+    if (k) { k.classList.add('on'); hit.add(e.code); n.textContent = hit.size; }
+  }, true);
   bindPicker(el, api);
 };
