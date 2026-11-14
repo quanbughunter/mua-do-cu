@@ -1,0 +1,46 @@
+# Mã MacBook (A-number, Model Identifier) — everymac.com (all-macbook-air/pro-model-numbers), support.apple.com/102869, xem 15/11/2026
+Air 13 2018 Intel | A1932 | MacBookAir8,1
+Air 13 2019 Intel | A1932 | MacBookAir8,2
+Air 13 2020 Intel | A2179 | MacBookAir9,1
+Air 13 M1 2020 | A2337 | MacBookAir10,1
+Air 13 M2 2022 | A2681 | Mac14,2
+Air 15 M2 2023 | A2941 | Mac14,15
+Air 13 M3 2024 | A3113 | Mac15,12
+Air 15 M3 2024 | A3114 | Mac15,13
+Air 13 M4 2025 | A3240 | Mac16,12
+Air 15 M4 2025 | A3241 | Mac16,13
+Air 13 M5 2026 | A3449 | Mac17,3
+Air 15 M5 2026 | A3448 | Mac17,4
+Neo 13 A18 Pro 2026 | A3404 | Mac17,5 | 03/2026, 599/699 USD (lên 699/799 từ 25/06/2026), 8 GB, 36,5 Wh, 1,23 kg, sạc 20 W
+Pro 13 2016-2017 no TB | A1708
+Pro 13 2016-2017 Touch Bar | A1706
+Pro 15 2016-2017 | A1707
+Pro 13 2018-2019 4TB3 | A1989
+Pro 15 2018-2019 | A1990
+Pro 16 2019 | A2141
+Pro 13 2019 2TB3 | A2159
+Pro 13 2020 2TB3 | A2289
+Pro 13 2020 4TB3 | A2251
+Pro 13 M1 2020 & M2 2022 | A2338
+Pro 14 M1 Pro/Max 2021 | A2442
+Pro 16 M1 Pro/Max 2021 | A2485
+Pro 14 M2 Pro/Max 2023 | A2779
+Pro 16 M2 Pro/Max 2023 | A2780
+Pro 14 M3 2023 | A2918
+Pro 14 M3 Pro/Max 2023 | A2992
+Pro 16 M3 Pro/Max 2023 | A2991
+Pro 14 M4 2024 | A3112 | Mac16,1 | 1599
+Pro 14 M4 Pro 2024 | A3401 | Mac16,8 | 1999
+Pro 14 M4 Max 2024 | A3185 | Mac16,6
+Pro 16 M4 Pro 2024 | A3403 | Mac16,7 | 2499
+Pro 16 M4 Max 2024 | A3186 | Mac16,5
+Pro 14 M5 2025 | A3434 | Mac17,2 | 1599
+Pro 14 M5 Pro 2026 | A3426 | Mac17,9
+Pro 14 M5 Max 2026 | A3427 | Mac17,7
+Pro 16 M5 Pro 2026 | A3428 | Mac17,8
+Pro 16 M5 Max 2026 | A3429 | Mac17,6
+Pro 14 M5 Pro OLED 2026 | A3468
+Pro 14 M5 Max OLED 2026 | A3375
+Pro 16 M5 Pro OLED 2026 | A3469
+Pro 16 M5 Max OLED 2026 | A3376
+Pro 14 M6 2026 | A3536

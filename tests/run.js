@@ -283,7 +283,7 @@ ok(/PHIẾU KIỂM ĐỒ CŨ/.test(rep) && /Giá hợp lý/.test(rep), 'Báo cá
   const bad = D.filter(m => !/^Dell /.test(m.name) || !m.year || m.year < 2016 || m.year > 2026 || !m.size || !m.cpu ||
     (m.vnd && !(m.vnd[0] >= 2e6 && m.vnd[1] >= m.vnd[0] && m.vnd[1] <= 1.2e8)) || (m.usd && !(m.usd >= 300 && m.usd <= 6000)));
   ok(!bad.length, 'Bảng Dell: tên, năm, cỡ màn, chip, khoảng giá hợp lệ', bad.map(m => m.id));
-  ok(A.LAPTOP.models.length === D.length + 2, 'Laptop: danh mục gồm bảng Dell + 2 mục khác');
+  ok(A.LAPTOP.models.length === D.length + A.LAPTOP_MORE.length + 8, 'Laptop: danh mục gồm bảng Dell, bảng hãng khác và 8 mục "khác"');
   const p = d('Precision 5560');
   ok(p.models[0] && p.models[0].id === 'dl-precision-5560' && !p.approx && p.year === 2021 && p.models[0].dgpu && p.models[0].vnd, 'Bảng Dell: Precision 5560 có trong bảng, có card rời, có giá VN', p.models[0]);
   const nb = A.dellNeighbors(p.models[0]);
@@ -305,6 +305,82 @@ ok(/PHIẾU KIỂM ĐỒ CŨ/.test(rep) && /Giá hợp lý/.test(rep), 'Báo cá
   ok(ref.src === 'vnd' && near(ref.value, mid, 1), 'Phiếu laptop: giá tham chiếu = giữa khoảng giá cũ ở VN', ref);
   const ins2 = A.newInspection('laptop', 'dl-xps-9640');
   ok(A.referencePrice(ins2, A.buildContext(ins2), S).src === 'estimate', 'Phiếu laptop: chưa có giá VN thì ước tính từ giá Mỹ');
+}
+
+// ---------- Laptop hãng khác: Lenovo, HP, MacBook, ASUS, Acer, MSI (src/laptops.js + data-laptops.js) ----------
+{
+  const L = A.LAPTOP_MORE, d = s => A.decodeLaptop(s);
+  const one = s => { const r = d(s); return r && r.ok && r.kind !== 'ambiguous' ? r : null; };
+  ok(L.length >= 300, 'Bảng hãng khác: đủ đời máy', L.length);
+  const ids = new Set(L.map(m => m.id));
+  ok(ids.size === L.length && L.every(m => !ids.has(m.id.replace(/^lp-/, 'dl-'))), 'Bảng hãng khác: id không trùng');
+  const bad = L.filter(m => !m.year || m.year < 2015 || m.year > 2026 || !m.cpu || !m.line || !A.LAPTOP_LINES[m.line] || (m.vnd && !(m.vnd[0] > 1e6 && m.vnd[1] >= m.vnd[0] && m.vnd[1] < 2e8)));
+  ok(!bad.length, 'Bảng hãng khác: năm, chip, dòng, khoảng giá hợp lệ', bad.map(m => m.id));
+  ok(['lenovo', 'hp', 'apple', 'asus', 'acer', 'msi'].every(b => L.filter(m => m.brand === b).length >= 20), 'Bảng hãng khác: mỗi hãng từ 20 đời');
+  ok(L.filter(m => m.vnd).length >= 80 && L.every(m => !m.vnd || /^https:\/\//.test(m.vndSrc)), 'Bảng hãng khác: có giá VN kèm nguồn');
+  ok(!L.some(m => /^HP HP |^Lenovo Lenovo /.test(m.name)), 'Bảng hãng khác: tên không lặp hãng');
+  // Lenovo
+  let r = one('ThinkPad T14 Gen 3');
+  ok(r && r.brand === 'lenovo' && r.year === 2022 && r.models[0] && !r.approx, 'Lenovo: ThinkPad T14 Gen 3 → 2022, có trong bảng', r);
+  ok(one('T480') && one('T480').year === 2018 && one('T490s').year === 2019, 'Lenovo: T480 → 2018, T490s → 2019');
+  r = one('Legion 5 15ACH6H');
+  ok(r && r.year === 2021 && /Ryzen 5000 H/.test(r.parts.find(p => p.label === 'Nền tảng chip').text) && r.parts.some(p => p.ch === 'H'), 'Lenovo: Legion 5 15ACH6H → Ryzen 5000 H, 2021, bản H', r && r.parts);
+  ok(one('IdeaPad 5 14ITL05').year === 2020 && one('LOQ 15IRH8').year === 2023, 'Lenovo: 14ITL05 → 2020, LOQ 15IRH8 → 2023');
+  ok(one('X1 Carbon Gen 9').year === 2021 && one('ThinkBook 14 G4 IAP').year === 2022, 'Lenovo: X1 Carbon Gen 9, ThinkBook 14 G4 IAP');
+  r = one('20W0S0XX00');
+  ok(r && r.models[0] && /T14 Gen 2/.test(r.models[0].name), 'Lenovo: Machine Type 20W0 → T14 Gen 2', r && r.title);
+  ok(d('X1 Carbon').kind === 'ambiguous', 'Lenovo: X1 Carbon không ghi đời thì hỏi lại');
+  // HP
+  ok(one('EliteBook 840 G8').year === 2021 && one('ProBook 450 G9').year === 2022, 'HP: EliteBook 840 G8 → 2021, ProBook 450 G9 → 2022');
+  r = one('Victus 16-d0123TX');
+  ok(r && r.brand === 'hp' && r.models[0] && /Intel Core thế hệ 11/.test(r.parts[2].text) && r.parts.some(p => p.ch === 'TX' && /card rời/.test(p.text)), 'HP: Victus 16-d0123TX → Core 11 H, card rời', r && r.parts);
+  ok(one('15s-fq2xxx') && one('15s-fq2xxx').models[0].name === 'HP 15s-fq2', 'HP: 15s-fq2xxx tra ra HP 15s-fq2');
+  ok(one('EliteBook x360 1030 G8').year === 2021 && one('ZBook Firefly 14 G8').year === 2021, 'HP: x360 1030 G8, ZBook Firefly 14 G8');
+  // Apple
+  r = d('A2338');
+  ok(r.kind === 'ambiguous' && r.models.length === 2 && r.models.some(m => /M1/.test(m.name)) && r.models.some(m => /M2/.test(m.name)), 'Apple: A2338 hỏi lại M1 hay M2', r.models && r.models.map(m => m.name));
+  r = one('MacBook Air M1');
+  ok(r && r.models[0] && r.models[0].codes.indexOf('A2337') >= 0 && r.year === 2020, 'Apple: MacBook Air M1 → A2337, 2020', r && r.models[0]);
+  ok(one('Mac14,2').models[0].name === 'MacBook Air 13 M2 (2022)' && one('MacBookPro17,1').models[0].year === 2020, 'Apple: Model Identifier Mac14,2 và MacBookPro17,1');
+  ok(one('MacBook Pro 14 M3 Pro').models[0].year === 2023 && one('MacBook Air 2019').models[0].year === 2019, 'Apple: Pro 14 M3 Pro, Air 2019');
+  r = one('MGN63LL/A');
+  ok(r && r.brand === 'apple' && r.parts[0].ch === 'M', 'Apple: số máy MGN63LL/A đọc ra nguồn gốc', r && r.parts);
+  // ASUS
+  r = one('FX506HC');
+  ok(r && r.brand === 'asus' && r.year === 2021 && /RTX 3050/.test(r.parts[3].text), 'ASUS: FX506HC → RTX 3050, 2021', r && r.parts);
+  ok(one('GA401QM').year === 2021 && /RTX 3060/.test(one('GA401QM').parts[3].text) && one('UX3402ZA').year === 2022, 'ASUS: GA401QM, UX3402ZA');
+  ok(d('Zephyrus G14').kind === 'ambiguous' && d('Zephyrus G14').models.length >= 4, 'ASUS: Zephyrus G14 không ghi mã thì hỏi lại đời');
+  ok(one('A1505VA') && one('A1505VA').year === 2023 && one('A1505VA').approx, 'ASUS: A1505VA chưa có trong bảng thì đoán ≈ 2023');
+  // Acer
+  ok(one('AN515-57').year === 2021 && one('AN515-57').models[0] && one('A515-56').year === 2021 && one('PH315-54').year === 2021, 'Acer: AN515-57, A515-56, PH315-54 → 2021');
+  ok(one('SF314-59').brand === 'acer' && one('ANV15-51').year === 2023, 'Acer: Swift SF314-59, Nitro V ANV15-51');
+  // MSI
+  r = one('Katana GF66 11UE');
+  ok(r && r.brand === 'msi' && r.year === 2021 && /RTX 3060/.test(r.parts.find(p => p.label === 'Card').text), 'MSI: Katana GF66 11UE → RTX 3060, 2021', r && r.parts);
+  ok(one('Katana 15 B13VFK').year === 2023 && /RTX 4060/.test(one('Katana 15 B13VFK').parts.find(p => p.label === 'Card').text), 'MSI: Katana 15 B13VFK → RTX 4060');
+  ok(/tích hợp/.test(one('Modern 14 C12M').parts.find(p => p.label === 'Card').text), 'MSI: Modern 14 C12M không card rời');
+  // Dell vẫn đi qua bộ đọc Dell
+  ok(one('Precision 5560').brand === 'dell' && one('Precision 5560').models[0].id === 'dl-precision-5560', 'Dell qua decodeLaptop vẫn ra bảng Dell');
+  ok(!d('abc xyz').ok && d('') === null, 'Tên lạ báo chưa nhận ra, ô trống không sinh kết quả');
+  // Đời trước, đời sau
+  const t14 = one('ThinkPad T14 Gen 3').models[0], nb = A.laptopNeighbors(t14);
+  ok(nb.prev && /T14 Gen 2/.test(nb.prev.name) && nb.next && /T14 Gen 4/.test(nb.next.name), 'Đời trước, đời sau: T14 Gen 2 ← Gen 3 → Gen 4', [nb.prev && nb.prev.name, nb.next && nb.next.name]);
+  ok(A.laptopByName('ThinkPad T14 Gen 3') === t14 && A.laptopByName('Precision 5560').id === 'dl-precision-5560', 'laptopByName: ra đúng đời máy');
+  // Phiếu kiểm MacBook: không hỏi BIOS / Windows, có khoá kích hoạt, đường giá riêng
+  const air = one('MacBook Air M1').models[0];
+  const im = A.newInspection('laptop', air.id), cm = A.buildContext(im);
+  const its = A.applicableItems(cm.cat, cm).map(x => x.id);
+  ok(its.indexOf('lp.maclock') >= 0 && its.indexOf('lp.bios') < 0 && its.indexOf('lp.windows') < 0 && its.indexOf('lp.gpu') < 0, 'Phiếu MacBook: có Khoá kích hoạt, bỏ BIOS, Windows, card rời', its);
+  ok(A.LAPTOP.retention(air) === 'mac' && A.LAPTOP.repairUSD(air).lbatt === 159, 'Phiếu MacBook: khấu hao riêng, giá thay pin Air 159 USD');
+  ok(/Táo/.test(A.textOf(A.LAPTOP.items.find(x => x.id === 'lp.battery').how, cm)), 'Phiếu MacBook: hướng dẫn pin theo macOS');
+  const leg = one('Legion 5 15ACH6H').models[0], il = A.newInspection('laptop', leg.id), cl = A.buildContext(il);
+  const itl = A.applicableItems(cl.cat, cl).map(x => x.id);
+  ok(itl.indexOf('lp.gpu') >= 0 && itl.indexOf('lp.bios') >= 0 && itl.indexOf('lp.maclock') < 0, 'Phiếu Legion: có card rời, BIOS; không có Khoá kích hoạt');
+  ok(/F1 trên ThinkPad|Novo/.test(A.textOf(A.LAPTOP.items.find(x => x.id === 'lp.bios').how, cl)), 'Phiếu Lenovo: phím vào BIOS theo hãng');
+  const ip = A.newInspection('laptop', 'lp-hp-other'), cp = A.buildContext(ip);
+  ok(cp.brand === 'hp' && A.applicableItems(cp.cat, cp).some(x => x.id === 'lp.gpu'), 'Phiếu "HP khác": vẫn hỏi card rời vì chưa biết cấu hình');
+  const withV = L.find(m => m.vnd), iv = A.newInspection('laptop', withV.id);
+  ok(A.referencePrice(iv, A.buildContext(iv), Object.assign({}, S, { currency: 'VND' })).src === 'vnd', 'Phiếu hãng khác: có giá VN thì lấy làm giá tham chiếu');
 }
 
 // ---------- Pin Galaxy từ nhật ký *#9900# ----------

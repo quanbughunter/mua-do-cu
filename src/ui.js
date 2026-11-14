@@ -1,6 +1,6 @@
 // ===== Giao diện: vẽ các màn hình từ trạng thái =====
 
-const BRAND_NAMES = { apple: 'Apple', samsung: 'Samsung', pixel: 'Google Pixel', xiaomi: 'Xiaomi', sony: 'Sony', bose: 'Bose', canon: 'Canon', nikon: 'Nikon', fujifilm: 'Fujifilm', other: 'Khác' };
+const BRAND_NAMES = { dell: 'Dell', lenovo: 'Lenovo', hp: 'HP', asus: 'ASUS', acer: 'Acer', msi: 'MSI', apple: 'Apple', samsung: 'Samsung', pixel: 'Google Pixel', xiaomi: 'Xiaomi', sony: 'Sony', bose: 'Bose', canon: 'Canon', nikon: 'Nikon', fujifilm: 'Fujifilm', other: 'Khác' };
 const ITEM_LINKS = {
   'ph.blacklist': [['imei.info', 'https://www.imei.info/']],
   'ph.serial': [['checkcoverage.apple.com', 'https://checkcoverage.apple.com/']],
@@ -87,11 +87,20 @@ function renderTicket(sc, v) {
 }
 
 // ---------- Tab Thông tin ----------
+const LP_BRANDS = ['dell', 'lenovo', 'hp', 'apple', 'asus', 'acer', 'msi', 'other'];
 function modelSelect(insp, c) {
   const groups = {};
-  c.cat.models.forEach(m => { const g = m.group || BRAND_NAMES[m.brand] || m.brand; (groups[g] = groups[g] || []).push(m); });
-  return '<div class="field"><label for="f-model">Máy cần kiểm</label><select class="inp" id="f-model" data-f="model"><option value="">— Chọn model —</option>' +
-    Object.keys(groups).map(b => '<optgroup label="' + esc(b) + '">' + groups[b].map(m => '<option value="' + m.id + '"' + (m.id === insp.model ? ' selected' : '') + '>' + esc(m.name) + (m.year ? ' (' + m.year + ')' : '') + '</option>').join('') + '</optgroup>').join('') +
+  let models = c.cat.models, pre = '';
+  if (c.cat.id === 'laptop') {
+    // Laptop có vài trăm đời máy: chọn hãng trước cho danh sách ngắn lại.
+    const b = insp.info.lbrand || (c.model ? c.model.brand : '');
+    if (b) models = models.filter(m => m.brand === b);
+    pre = '<div class="field"><label for="f-lbrand">Hãng</label><select class="inp" id="f-lbrand" data-f="info.lbrand"><option value="">Tất cả các hãng</option>' +
+      LP_BRANDS.map(x => '<option value="' + x + '"' + (x === b ? ' selected' : '') + '>' + (x === 'apple' ? 'Apple MacBook' : esc(BRAND_NAMES[x])) + '</option>').join('') + '</select></div>';
+  }
+  models.forEach(m => { const g = m.group || BRAND_NAMES[m.brand] || m.brand; (groups[g] = groups[g] || []).push(m); });
+  return pre + '<div class="field"><label for="f-model">Máy cần kiểm</label><select class="inp" id="f-model" data-f="model"><option value="">— Chọn model —</option>' +
+    Object.keys(groups).map(b => '<optgroup label="' + esc(b) + '">' + groups[b].map(m => '<option value="' + m.id + '"' + (m.id === insp.model ? ' selected' : '') + '>' + esc(m.name) + (m.year && m.name.indexOf('(' + m.year) < 0 ? ' (' + m.year + ')' : '') + '</option>').join('') + '</optgroup>').join('') +
     '</select></div>';
 }
 
@@ -120,7 +129,7 @@ const CODE_WHERE = [
 const QUICK = {
   market: { name: 'Mã máy → bản nước nào', sub: 'iPhone, Samsung, Xiaomi, Oppo, vivo, Honor', icon: 'globe' },
   imei: { name: 'Kiểm tra IMEI', sub: 'Đủ 15 số, đúng chữ số cuối', icon: 'hash' },
-  dell: { name: 'Tên laptop Dell → cấu hình', sub: 'Năm, cấu hình, giá ra mắt, giá cũ ở Việt Nam', icon: 'laptop' }
+  dell: { name: 'Tên laptop → cấu hình', sub: 'Dell, Lenovo, HP, MacBook, ASUS, Acer, MSI: năm, cấu hình, giá', icon: 'laptop' }
 };
 const toneCls = t => (t === 'pass' || t === 'warn' || t === 'stop' ? t : 'info');
 
@@ -180,8 +189,8 @@ function renderQuick(name, val) {
     '<div class="wrap body">' + (name === 'market' ? quickMarketHTML(val) : name === 'dell' ? quickDellHTML(val) : quickImeiHTML(val)) + '</div></div>';
 }
 
-// ---------- Tên laptop Dell ----------
-const DELL_EXAMPLES = ['Precision 5560', 'Latitude 7420', 'XPS 15 9510', 'Inspiron 7620', 'G15 5520', 'Vostro 3510', 'Pro Max 16 Plus', '5420'];
+// ---------- Tên laptop → cấu hình (Dell ở dell.js, hãng khác ở laptops.js) ----------
+const DELL_EXAMPLES = ['Precision 5560', 'ThinkPad T14 Gen 3', 'EliteBook 840 G8', 'MacBook Air M2', 'A2338', 'Legion 5 15ACH6H', 'FX506HC', 'AN515-57', 'Katana GF66 11UE', 'Latitude 7420'];
 
 function usdHint(usd) {
   const s = S.settings, vnd = usd * s.usdRub * s.rubVnd;
@@ -193,7 +202,7 @@ function usdHint(usd) {
 function dellSpecHTML(m) {
   const rows = [
     ['Ra mắt', m.launch ? m.launch.replace(/^(\d{4})-(\d{2}).*/, '$2/$1') : m.year],
-    ['CPU', m.cpu], ['Card đồ hoạ', m.gpu], ['RAM', m.ram], ['Ổ cứng', m.storage], ['Màn hình', m.display],
+    ['Cỡ màn', m.brand !== 'dell' ? m.size : ''], ['CPU', m.cpu], ['Card đồ hoạ', m.gpu], ['RAM', m.ram], ['Ổ cứng', m.storage], ['Màn hình', m.display],
     ['Nặng', m.weight ? String(m.weight).replace('.', ',') + ' kg' : ''], ['Pin', m.battery ? m.battery + ' Wh' : ''], ['Sạc', m.charger]
   ].filter(r => r[1]);
   return '<dl class="kv dl-spec">' + rows.map(r => '<dt>' + r[0] + '</dt><dd>' + esc(String(r[1])) + '</dd>').join('') + '</dl>';
@@ -217,7 +226,7 @@ function dellResultHTML(res, opts) {
   }
   const m = res.models[0] || null;
   let h = '<article class="dl-card">';
-  h += '<div class="dl-head"><div><span class="eyebrow">' + esc(res.lineKind || 'Dell, tên mới từ 2025') + '</span><h3>' + esc(res.title) + '</h3></div>' +
+  h += '<div class="dl-head"><div><span class="eyebrow">' + esc(res.lineKind || (res.brand === 'dell' ? 'Dell, tên mới từ 2025' : 'Laptop')) + '</span><h3>' + esc(res.title) + '</h3></div>' +
     (res.year ? '<span class="dl-year' + (res.approx ? ' approx' : '') + '">' + (res.approx ? '≈ ' : '') + res.year + '</span>' : '') + '</div>';
   h += '<div class="dl-anat" aria-label="Giải nghĩa tên máy">' + (res.lineName ? '<div class="dl-t word"><b>' + esc(res.lineName) + '</b><span class="lbl">Dòng</span><span>' + esc(res.lineShort || res.lineKind) + '</span></div>' : '') +
     res.parts.map(p => '<div class="dl-t"><b class="mono">' + esc(p.ch) + '</b><span class="lbl">' + esc(p.label) + '</span><span>' + esc(p.text) + '</span></div>').join('') + '</div>';
@@ -226,11 +235,12 @@ function dellResultHTML(res, opts) {
   if (m) {
     if (m.note) h += '<div class="note tone-info">' + esc(m.note) + '</div>';
     h += dellSpecHTML(m) + dellPriceHTML(m);
-    const nb = dellNeighbors(m);
-    const chips = [];
-    if (nb.prev) chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(nb.prev.name) + '">← Đời trước: ' + esc(nb.prev.code) + ' · ' + nb.prev.year + '</button>');
-    if (nb.next) chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(nb.next.name) + '">Đời sau: ' + esc(nb.next.code) + ' · ' + nb.next.year + ' →</button>');
-    nb.same.forEach(x => chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(x.name) + '">' + esc(x.name.replace(/^Dell /, '')) + (x.size ? ' · ' + esc(x.size) : '') + '</button>'));
+    if (m.brand !== 'dell') h += '<p class="hint">Thông số tổng hợp từ trang hãng và bài đánh giá, ghi bản phổ biến. Máy cũ có nhiều cấu hình: đối chiếu số sê-ri trên trang ' + esc(BRAND_NAMES[m.brand] || 'hãng') + ' trước khi trả tiền.</p>';
+    const nb = laptopNeighbors(m);
+    const chips = [], short = x => x.name.replace(/^(Dell|Lenovo|HP|ASUS|Acer|MSI) /, '');
+    if (nb.prev) chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(nb.prev.name) + '">← Đời trước: ' + esc(m.brand === 'dell' ? nb.prev.code : short(nb.prev)) + ' · ' + nb.prev.year + '</button>');
+    if (nb.next) chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(nb.next.name) + '">Đời sau: ' + esc(m.brand === 'dell' ? nb.next.code : short(nb.next)) + ' · ' + nb.next.year + ' →</button>');
+    nb.same.forEach(x => chips.push('<button class="chiplink" data-act="dellpick" data-v="' + esc(x.name) + '">' + esc(short(x)) + (x.size && m.brand === 'dell' ? ' · ' + esc(x.size) : '') + '</button>'));
     if (chips.length) h += '<div class="dl-nb"><span class="lbl">Cùng họ</span><div class="dl-pick">' + chips.join('') + '</div></div>';
   } else {
     h += '<dl class="kv dl-spec">' + [['Năm', res.year ? '≈ ' + res.year : 'Chưa rõ'], ['Chip', res.cpu || '—'], ['Cỡ màn', res.size || '—']].map(r => '<dt>' + r[0] + '</dt><dd>' + esc(String(r[1])) + '</dd>').join('') + '</dl>';
@@ -241,7 +251,7 @@ function dellResultHTML(res, opts) {
   if (m) h += '<div class="btnrow">' + (opts.inInsp
     ? '<button class="btn primary" data-act="dellset" data-model="' + m.id + '">Chọn đời này cho phiếu</button>'
     : '<button class="btn primary" data-act="newwith" data-cat="laptop" data-model="' + m.id + '">Kiểm máy này ' + icon('chev', 'sm') + '</button>') + '</div>';
-  else if (!opts.inInsp) h += '<div class="btnrow"><button class="btn" data-act="newwith" data-cat="laptop" data-model="lp-dell-other">Kiểm máy này (chưa có trong bảng) ' + icon('chev', 'sm') + '</button></div>';
+  else if (!opts.inInsp) h += '<div class="btnrow"><button class="btn" data-act="newwith" data-cat="laptop" data-model="' + (res.brand && res.brand !== 'other' ? 'lp-' + res.brand + '-other' : 'lp-other') + '">Kiểm máy này (chưa có trong bảng) ' + icon('chev', 'sm') + '</button></div>';
   return h + '</article>';
 }
 
@@ -254,32 +264,88 @@ const DELL_RULES = [
   ['Tên mới từ 2025', 'Dell (thay Inspiron, XPS, Vostro), Dell Pro (thay Latitude), Dell Pro Max (thay Precision) · cỡ màn · hạng Base, Plus, Premium. Mã dưới đáy máy như PB14250: P = Dell Pro, B = Plus (A = Premium, C = Base), 14 = 14″, 25 = 2025, số cuối 0 = Intel, 5 = AMD. Từ 03/2026 có thêm Dell Pro Precision, mã PW (vd. PW514260). Dell không công bố bảng giải mã; quy tắc này suy từ tên máy Dell bán.', 'Dell Pro Max 16 Plus = máy trạm 16″ hạng giữa']
 ];
 
-function dellRulesHTML() {
-  return '<details class="panel where"><summary>Cách đọc tên laptop Dell</summary><dl class="kv dl-rules">' +
-    DELL_RULES.map(r => '<dt>' + esc(r[0]) + '</dt><dd class="txt">' + esc(r[1]) + '<span class="small muted dl-ex">' + esc(r[2]) + '</span></dd>').join('') + '</dl>' +
-    (typeof DELL_RULE_SOURCES !== 'undefined' && DELL_RULE_SOURCES.length ? '<p class="small muted">Nguồn đối chiếu: ' + DELL_RULE_SOURCES.map((s, i) => '<a href="' + esc(s.u) + '" target="_blank" rel="noopener" title="' + esc(s.t) + '">' + (i + 1) + '</a>').join(' · ') + '</p>' : '') + '</details>';
+// Quy tắc đặt tên hãng khác: suy từ bảng đời máy của hãng (PSREF Lenovo, trang HP, everymac.com) và tên máy bán ra.
+const LAPTOP_RULES = {
+  lenovo: [
+    ['ThinkPad đời mới', 'Chữ đầu là dòng: T chủ lực, X nhỏ gọn, P máy trạm, E và L giá rẻ, Z cao cấp chip AMD · số là cỡ màn (14 = 14″, 16 = 16″) · chữ sau số: s mỏng nhẹ, p chip H, g card rời mạnh · Gen N là đời. T14, T15, X13, L14, P14s: Gen 1 = 2020; T16, P16, Z13: Gen 1 = 2022; X1 Carbon Gen 9 = 2021. Tem đáy máy có MTM, 4 ký tự đầu (vd. 20W0) là mã loại máy, tra ra đúng đời.', 'ThinkPad T14s Gen 3 = chủ lực · 14″ · mỏng nhẹ · 2022'],
+    ['ThinkPad đời cũ', 'Chữ dòng · số giữa là cỡ màn (2 = 12,5″, 4 = 14″, 5 = 15,6″) · hai số cuối là đời: 70 = 2017, 80 = 2018, 90 = 2019 · số cuối 5 là chip AMD (A485, T495). P5x: P52 = 2018, P53 = 2019.', 'T480s = 14″ · 2018 · mỏng nhẹ'],
+    ['IdeaPad, Legion, Yoga, LOQ', 'Số sau tên là hạng (1, 3, 5, 7, 9: càng lớn càng cao cấp). Mã máy kiểu 15ACH6H: 15 = cỡ màn · chữ đầu I là Intel, A là AMD, Q là Snapdragon · hai chữ tiếp là nền tảng chip (CH = Ryzen 5000 H, ITL = Core thế hệ 11, IAH = Core thế hệ 12 H, IRH = Core thế hệ 13 H…) · số cuối là đời: 05 = 2020, 6 = 2021, 7 = 2022, 8 = 2023, 9 = 2024, 10 = 2025 · chữ H cuối là bản công suất cao của Legion.', 'Legion 5 15ACH6H = hạng 5 · 15,6″ · Ryzen 5000 H · 2021'],
+    ['ThinkBook', 'Cỡ màn · G là đời (G2 2021, G4 2022, G6 2023, G7 2024) · ba chữ cuối là nền tảng chip như IdeaPad.', 'ThinkBook 14 G4 IAP = 14″ · Core thế hệ 12 P · 2022']
+  ],
+  hp: [
+    ['EliteBook, ProBook', '3 số: số đầu là hạng (EliteBook 8 = 800 chủ lực, 6 = 600, 1000 dòng x360 1030/1040 cao nhất; ProBook 4 = 400, 6 = 600) · số giữa là cỡ màn (3 = 13,3″, 4 = 14″, 5 = 15,6″, 6 = 16″) · số cuối 0 Intel, 5 AMD · G là đời. EliteBook G8 = 2021, G9 = 2022, G10 = 2023, G11 = 2024; ProBook G8 = 2020 (ra cuối năm), G9 = 2022.', 'EliteBook 845 G8 = hạng 800 · 14″ · AMD · 2021'],
+    ['ZBook', 'Máy trạm. Firefly mỏng nhẹ, Studio mỏng màn đẹp, Power giá mềm, Fury mạnh nhất · cỡ màn · G là đời (G7 = 2020, G8 = 2021, G9 = 2022, G10 = 2023).', 'ZBook Firefly 14 G8 = 14″ · 2021'],
+    ['Victus, Omen, Pavilion, Envy, 15s', 'Mã sau dấu gạch, vd. 16-d0123TX: 16 = cỡ màn · d = mã dòng (mỗi dòng một chữ, cố định nền tảng Intel hoặc AMD) · số đầu sau chữ là đời trong dòng · hai chữ cuối: TU Intel không card rời, TX Intel có card rời, AU AMD không card rời, AX AMD có card rời (hàng châu Á). Chữ s sau cỡ màn (15s) là bản giá rẻ.', 'Victus 16-d0123TX = Core thế hệ 11 H · card rời · 2021'],
+    ['Tên mới từ 2025', 'HP đổi tên: EliteBook 8 G1i 14 = EliteBook hạng 8 · đời 1 tên mới (2025) · i Intel, a AMD, q Snapdragon · 14″. Tương tự ProBook 4 G1i, ZBook Ultra G1a, OmniBook (thay Pavilion, Envy, Spectre).', 'ZBook Ultra G1a 14 = máy trạm · AMD · 2025']
+  ],
+  apple: [
+    ['Số model A…', 'In dưới đáy máy (vd. A2338). Một số model dùng cho nhiều đời: A2338 là cả MacBook Pro 13 M1 (2020) và M2 (2022), A1932 là MacBook Air 2018 và 2019. Muốn chắc thì xem Model Identifier trong Báo cáo hệ thống (vd. MacBookPro17,1 = M1, Mac14,7 = M2) hoặc tra số sê-ri.', 'A2337 = MacBook Air M1 (2020)'],
+    ['Tên bán', 'MacBook Air: mỏng nhẹ, không quạt. MacBook Pro: có quạt, cổng HDMI và khe thẻ (bản 14, 16). MacBook Neo (2026): giá rẻ. Chip M1 ra 2020, M2 2022, M3 2023, M4 2024, M5 2025; Pro và Max mạnh hơn bản thường.', 'MacBook Pro 14 M3 Pro = 2023'],
+    ['Số máy (part number)', 'Dạng MGN63LL/A: chữ đầu M là máy mới bán lẻ, F là máy Apple tân trang, N là máy đổi bảo hành · hai chữ trước /A là thị trường (LL Mỹ, ZA Singapore…). Không cho biết đời máy.', 'FGN63LL/A = máy tân trang, hàng Mỹ']
+  ],
+  asus: [
+    ['Mã trên tem', 'Vd. FX506HC: chữ đầu là dòng (FX, FA TUF; GA, GU Zephyrus; G Strix; UX, UM Zenbook; X, M, K, S, E, A Vivobook; B ExpertBook) · số là khung máy, có cỡ màn (506 = 15,6″, 3402 = 14″ hạng 3) · chữ kế cuối là nền tảng chip (Intel: E = Core 11 U, H = Core 11 H, Z = Core 12, V = Core 13; AMD: Q = Ryzen 5000 H, R = Ryzen 6000 H, X = Ryzen 7040) · chữ cuối là card (A = tích hợp; 2021–22: C = RTX 3050, M = 3060, R = 3070; từ 2023: U = 4050, V = 4060, I = 4070).', 'FX506HC = TUF · 15,6″ · Core 11 H · RTX 3050 · 2021']
+  ],
+  acer: [
+    ['Mã trên tem', 'Vd. AN515-57: chữ là dòng (AN Nitro 5, ANV Nitro V, PH Helios, PHN Helios Neo, PT Triton, A Aspire, SF Swift, SFG Swift Go, SP Spin) · 3 số là hạng và cỡ màn (515 = hạng 5, 15,6″) · số sau gạch là nền tảng: số đầu 4 là AMD, 5 và 7 là Intel, 3 là Celeron; số sau tăng theo đời (AN515-55 2020, -57 2021, -58 2022).', 'AN515-57 = Nitro 5 · 15,6″ · Core 11 H · 2021']
+  ],
+  msi: [
+    ['Mã sau tên', 'Vd. Katana GF66 11UE: số là đời chip Intel (11 = Core thế hệ 11; 1, 2 = Core Ultra) · chữ đầu là đời card (R = GTX 10, S = GTX 16/RTX 20, U = RTX 30, V = RTX 40, W = RTX 50, M = không card rời) · chữ thứ hai là hạng card (U: C = 3050, E = 3060, G = 3070; V: F = 4060, G = 4070). Mã kiểu B13VFK: chữ đầu là lần làm lại khung. Bravo, Alpha, Delta là bản AMD: số là đời Ryzen.', 'Katana 15 B13VFK = Core 13 · RTX 4060 · 2023']
+  ]
+};
+const LP_RULE_TITLES = { dell: 'Dell', lenovo: 'Lenovo', hp: 'HP', apple: 'MacBook', asus: 'ASUS', acer: 'Acer', msi: 'MSI' };
+function lpRulesDL(rows) {
+  return '<dl class="kv dl-rules">' + rows.map(r => '<dt>' + esc(r[0]) + '</dt><dd class="txt">' + esc(r[1]) + '<span class="small muted dl-ex">' + esc(r[2]) + '</span></dd>').join('') + '</dl>';
+}
+function dellRulesHTML(brand) {
+  const src = typeof DELL_RULE_SOURCES !== 'undefined' && DELL_RULE_SOURCES.length ? '<p class="small muted">Nguồn đối chiếu (Dell): ' + DELL_RULE_SOURCES.map((s, i) => '<a href="' + esc(s.u) + '" target="_blank" rel="noopener" title="' + esc(s.t) + '">' + (i + 1) + '</a>').join(' · ') + '</p>' : '';
+  if (brand && brand !== 'dell' && LAPTOP_RULES[brand]) return '<details class="panel where"><summary>Cách đọc tên laptop ' + esc(LP_RULE_TITLES[brand]) + '</summary>' + lpRulesDL(LAPTOP_RULES[brand]) + '</details>';
+  if (brand === 'dell') return '<details class="panel where"><summary>Cách đọc tên laptop Dell</summary>' + lpRulesDL(DELL_RULES) + src + '</details>';
+  return '<details class="panel where"><summary>Cách đọc tên laptop từng hãng</summary>' +
+    Object.keys(LP_RULE_TITLES).map(b => '<details class="lp-rb"><summary>' + esc(LP_RULE_TITLES[b]) + '</summary>' + lpRulesDL(b === 'dell' ? DELL_RULES : LAPTOP_RULES[b]) + (b === 'dell' ? src : '') + '</details>').join('') + '</details>';
 }
 
 function quickDellHTML(val) {
-  return '<p class="how">Gõ tên in dưới đáy máy, trong BIOS hoặc trên tin rao. Ví dụ "Precision 5560": app tách từng chữ số ra nghĩa, rồi cho cấu hình, năm ra mắt, giá ở Mỹ và giá máy cũ ở Việt Nam.</p>' +
-    '<div class="field"><label for="q-dell">Tên hoặc mã máy</label><input class="inp" id="q-dell" autocomplete="off" spellcheck="false" placeholder="Precision 5560" value="' + esc(val || '') + '"></div>' +
+  return '<p class="how">Gõ tên in dưới đáy máy, trong BIOS hoặc trên tin rao: Dell, Lenovo, HP, MacBook (số model A… cũng được), ASUS, Acer, MSI. App tách từng chữ, số ra nghĩa, rồi cho cấu hình, năm ra mắt, giá ở Mỹ và giá máy cũ ở Việt Nam.</p>' +
+    '<div class="field"><label for="q-dell">Tên hoặc mã máy</label><input class="inp" id="q-dell" autocomplete="off" spellcheck="false" placeholder="ThinkPad T14 Gen 3" value="' + esc(val || '') + '"></div>' +
     '<div class="links mk-ex"><span class="small muted">Thử:</span>' + DELL_EXAMPLES.map(e => '<button class="chiplink" data-act="dellpick" data-v="' + esc(e) + '">' + esc(e) + '</button>').join('') + '</div>' +
     '<div id="q-out">' + quickDellOut(val) + '</div>' + dellRulesHTML() +
-    '<p class="hint">Cấu hình và giá ra mắt lấy từ trang Dell, Notebookcheck và các bài đánh giá; giá máy cũ lấy từ các cửa hàng ở Việt Nam, ghi ngày xem. Mỗi máy cũ có cấu hình riêng, nên đối chiếu Service Tag trên trang Dell.</p>';
+    '<p class="hint">Cấu hình và giá ra mắt lấy từ trang hãng (Dell, PSREF Lenovo, HP, Apple), everymac.com, Notebookcheck và các bài đánh giá; giá máy cũ lấy từ các cửa hàng ở Việt Nam, ghi ngày xem. Mỗi máy cũ có cấu hình riêng, nên đối chiếu số sê-ri trên trang hãng.</p>';
 }
-function quickDellOut(val) { return val && val.trim() ? dellResultHTML(decodeDell(val)) : ''; }
+function quickDellOut(val) { return val && val.trim() ? dellResultHTML(decodeLaptop(val)) : ''; }
 
+const LP_TAG_FIELD = {
+  dell: ['Service Tag (7 ký tự dưới đáy máy hoặc trong BIOS)', 'ABC1D23', 7],
+  lenovo: ['Số sê-ri S/N hoặc MTM (tem dưới đáy máy)', 'PF2ABCDE', 20],
+  hp: ['Số sê-ri S/N (tem dưới đáy máy hoặc trong BIOS)', '5CG1234ABC', 20],
+  apple: ['Số sê-ri (khắc dưới đáy máy, hoặc menu Táo › Giới thiệu về máy Mac)', 'C02ABC12DEF3', 20],
+  asus: ['Số sê-ri S/N (tem dưới đáy máy)', 'M1NRKD012345678', 24],
+  acer: ['Số sê-ri S/N hoặc SNID (tem dưới đáy máy)', 'NHQBCSV00112345678', 26],
+  msi: ['Số sê-ri S/N (tem dưới đáy máy)', 'K2108N0012345', 24],
+  other: ['Số sê-ri (tem dưới đáy máy hoặc trong BIOS)', '', 26]
+};
 function laptopInfoHTML(insp, c) {
-  const I = insp.info, tag = (I.tag || '').toUpperCase();
-  let h = '<div class="field"><label for="f-tag">Service Tag (7 ký tự dưới đáy máy hoặc trong BIOS)</label><input class="inp mono" id="f-tag" data-f="info.tag" data-live="tag" autocapitalize="characters" autocomplete="off" maxlength="7" placeholder="ABC1D23" value="' + esc(I.tag || '') + '"><div id="d-tag">' + tagHTML(tag, c) + '</div></div>';
-  h += '<div class="btnrow"><button class="toolbtn" data-act="tool" data-tool="dellname" data-item="lp.spec">' + icon('tool', 'sm') + 'Tra tên máy Dell ra cấu hình</button><button class="toolbtn" data-act="tool" data-tool="battreport" data-item="lp.battery">' + icon('tool', 'sm') + 'Đọc battery report</button></div>';
+  const I = insp.info, tag = (I.tag || '').toUpperCase(), F = LP_TAG_FIELD[c.brand] || LP_TAG_FIELD.other;
+  let h = '<div class="field"><label for="f-tag">' + esc(F[0]) + '</label><input class="inp mono" id="f-tag" style="text-transform:uppercase" data-f="info.tag" data-live="tag" autocapitalize="characters" autocomplete="off" maxlength="' + F[2] + '" placeholder="' + esc(F[1]) + '" value="' + esc(I.tag || '') + '"><div id="d-tag">' + tagHTML(tag, c) + '</div></div>';
+  h += '<div class="btnrow"><button class="toolbtn" data-act="tool" data-tool="dellname" data-item="lp.spec">' + icon('tool', 'sm') + 'Tra tên máy ra cấu hình</button>' + (c.brand !== 'apple' ? '<button class="toolbtn" data-act="tool" data-tool="battreport" data-item="lp.battery">' + icon('tool', 'sm') + 'Đọc battery report</button>' : '') + '</div>';
   if (c.model && c.model.code) h += '<div class="dl-mini">' + dellSpecHTML(c.model) + dellPriceHTML(c.model) + '</div>';
   return h;
 }
 function tagHTML(tag, c) {
   if (!tag) return '';
-  if (!/^[A-Z0-9]{7}$/.test(tag)) return '<div class="decode tone-warn">Service Tag của Dell có đúng 7 ký tự chữ và số.</div>';
-  return '<div class="links"><a class="chiplink" href="https://www.dell.com/support/home/vi-vn/product-support/servicetag/' + tag + '/overview" target="_blank" rel="noopener">Tra ' + tag + ' trên trang Dell' + icon('ext', 'sm') + '</a></div>';
+  const b = c.brand, link = (u, t) => '<a class="chiplink" href="' + esc(u) + '" target="_blank" rel="noopener">' + esc(t) + icon('ext', 'sm') + '</a>';
+  if (b === 'dell') {
+    if (!/^[A-Z0-9]{7}$/.test(tag)) return '<div class="decode tone-warn">Service Tag của Dell có đúng 7 ký tự chữ và số.</div>';
+    return '<div class="links">' + link('https://www.dell.com/support/home/vi-vn/product-support/servicetag/' + tag + '/overview', 'Tra ' + tag + ' trên trang Dell') + '</div>';
+  }
+  let note = '', links = [];
+  if (b === 'lenovo') {
+    const mt = tag.match(/^(2[01][A-Z0-9]{2})/), hit = mt ? lpByCode(mt[1], 'lenovo') : [];
+    if (hit.length) note = '<div class="decode tone-' + (c.model && c.model.code && hit.every(x => x.id !== c.model.id) ? 'warn' : 'info') + '">Mã loại máy ' + mt[1] + ' là ' + esc(hit.map(x => x.name.replace(/^Lenovo /, '')).join(' hoặc ')) + (c.model && c.model.code && hit.every(x => x.id !== c.model.id) ? ', khác đời đang chọn' : '') + '.</div>';
+    links = [link(LP_WARRANTY.lenovo[1], 'Tra bảo hành Lenovo'), link('https://psref.lenovo.com/', 'Thông số gốc (PSREF)')];
+  } else if (LP_WARRANTY[b]) links = [link(LP_WARRANTY[b][1], 'Tra bảo hành ' + LP_WARRANTY[b][0])];
+  if (b === 'apple' && !/^[A-Z0-9]{10,12}$/.test(tag)) note = '<div class="decode tone-warn">Số sê-ri Mac có 10–12 ký tự chữ và số (máy từ 2021 là 10 ký tự ngẫu nhiên).</div>';
+  return note + (links.length ? '<div class="links">' + links.join('') + '<button class="chiplink" data-act="copy" data-src="f-tagv">' + icon('copy', 'sm') + 'Chép số</button><span hidden id="f-tagv">' + esc(tag) + '</span></div>' : '');
 }
 
 function decodeImeiHTML(v) {

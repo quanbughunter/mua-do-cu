@@ -1,0 +1,49 @@
+# ASUS. Mã máy (FX506HC, UX3402ZA…) ở cuối tên, in trên tem đáy máy.
+## brand=asus line=tuf group=ASUS TUF Gaming
+TUF Gaming F15 FX506LH | 2020 | 2020-05 | 15,6″ | Intel Core thế hệ 10 H (i5-10300H, i7-10750H) | NVIDIA GTX 1650 | DDR4, 2 khe, tối đa 32 GB | 15,6″ FHD 144 Hz | 2,3 | 48 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX506LI | 2020 | 2020-05 | 15,6″ | Intel Core thế hệ 10 H (i5-10300H, i7-10750H) | NVIDIA GTX 1650 Ti | DDR4, 2 khe, tối đa 32 GB | 15,6″ FHD 144 Hz | 2,3 | 48 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX506LU | 2020 | 2020-05 | 15,6″ | Intel Core thế hệ 10 H (i5-10300H, i7-10750H) | NVIDIA GTX 1660 Ti | DDR4, 2 khe, tối đa 32 GB | 15,6″ FHD 144 Hz | 2,3 | 48 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX506HC | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA RTX 3050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 48 hoặc 90 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX506HE | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA RTX 3050 Ti | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 48 hoặc 90 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX506HM | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA RTX 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 90 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX506HF | 2022 | 2022-04 | 15,6″ | Intel Core i5-11400H (thế hệ 11 H) | NVIDIA RTX 2050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 48 | | series=TUF Gaming F15/F16; note=Bản rẻ ra sau, card RTX 2050 yếu hơn RTX 3050.
+TUF Gaming F15 FX507ZC | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 H (i5-12500H, i7-12700H) | NVIDIA RTX 3050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 56 hoặc 90 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX507ZM | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 H (i7-12700H) | NVIDIA RTX 3060 | DDR5, 2 khe | 15,6″ FHD 144 Hz hoặc WQHD | 2,2 | 90 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX507VU | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 13 H (i7-13620H) | NVIDIA RTX 4050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 90 | | series=TUF Gaming F15/F16
+TUF Gaming F15 FX507VV | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 13 H (i7-13620H) | NVIDIA RTX 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 90 | | series=TUF Gaming F15/F16
+TUF Gaming A15 FA506IH | 2020 | 2020-05 | 15,6″ | AMD Ryzen 4000 H (R5 4600H, R7 4800H) | NVIDIA GTX 1650 | DDR4, 2 khe, tối đa 32 GB | 15,6″ FHD 144 Hz | 2,3 | 48 | | series=TUF Gaming A15/A16
+TUF Gaming A15 FA506IU | 2020 | 2020-05 | 15,6″ | AMD Ryzen 4000 H (R7 4800H) | NVIDIA GTX 1660 Ti | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 90 | | series=TUF Gaming A15/A16
+TUF Gaming A15 FA506QM | 2021 | 2021-05 | 15,6″ | AMD Ryzen 5000 H (R7 5800H) | NVIDIA RTX 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 90 | | series=TUF Gaming A15/A16
+TUF Gaming A15 FA507RM | 2022 | 2022-03 | 15,6″ | AMD Ryzen 6000 H (R7 6800H) | NVIDIA RTX 3060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 90 | | series=TUF Gaming A15/A16
+TUF Gaming A15 FA506NC | 2023 | 2023-06 | 15,6″ | AMD Ryzen 5 7535HS (Ryzen 7035) | NVIDIA RTX 3050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 48 | | series=TUF Gaming A15/A16; aliases=TUF Gaming A15 FA506NCG
+TUF Gaming A15 FA507NU | 2023 | 2023-02 | 15,6″ | AMD Ryzen 7 7735HS (Ryzen 7035) | NVIDIA RTX 4050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 90 | | series=TUF Gaming A15/A16
+TUF Gaming A15 FA507NV | 2023 | 2023-02 | 15,6″ | AMD Ryzen 7 7735HS (Ryzen 7035) | NVIDIA RTX 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 90 | | series=TUF Gaming A15/A16
+TUF Gaming A15 FA507UV | 2024 | 2024-01 | 15,6″ | AMD Ryzen 9 8945H (Ryzen 8040) | NVIDIA RTX 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 90 | | series=TUF Gaming A15/A16
+## brand=asus line=rog group=ASUS ROG
+ROG Zephyrus G14 GA401IV | 2020 | 2020-03 | 14″ | AMD Ryzen 9 4900HS hoặc Ryzen 7 4800HS | NVIDIA RTX 2060 Max-Q | 8 GB hàn trên bo + 1 khe | 14″ FHD 120 Hz hoặc WQHD | 1,6 | 76 | 1449 | series=ROG Zephyrus G14; note=Bản có đèn AniMe Matrix ở nắp nặng khoảng 1,7 kg.
+ROG Zephyrus G14 GA401QM | 2021 | 2021-01 | 14″ | AMD Ryzen 5000 HS (R7 5800HS, R9 5900HS) | NVIDIA RTX 3060 | 8 GB hàn trên bo + 1 khe | 14″ FHD 144 Hz hoặc WQHD 120 Hz | 1,7 | 76 | 1449 | series=ROG Zephyrus G14
+ROG Zephyrus G14 GA402RJ | 2022 | 2022-02 | 14″ (16:10) | AMD Ryzen 6000 HS (R7 6800HS, R9 6900HS) | AMD Radeon RX 6700S | Hàn trên bo + 1 khe | 14″ QHD+ 120 Hz | 1,65 | 76 | | series=ROG Zephyrus G14
+ROG Zephyrus G14 GA402XV | 2023 | 2023-02 | 14″ (16:10) | AMD Ryzen 9 7940HS (Ryzen 7040) | NVIDIA RTX 4060 | DDR5 hàn trên bo + 1 khe | 14″ QHD+ 165 Hz, có bản mini-LED | 1,72 | 76 | | series=ROG Zephyrus G14
+ROG Zephyrus G14 GA403UV | 2024 | 2024-01 | 14″ (16:10) | AMD Ryzen 9 8945HS (Ryzen 8040) | NVIDIA RTX 4060 | 16 hoặc 32 GB LPDDR5x hàn trên bo | 14″ 3K OLED 120 Hz | 1,5 | 73 | 1599 | series=ROG Zephyrus G14; note=Đời 2024 vỏ nhôm nguyên khối, màn OLED.
+ROG Strix G15 G513QM | 2021 | 2021-02 | 15,6″ | AMD Ryzen 5000 H (R7 5800H, R9 5900HX) | NVIDIA RTX 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,1 | 90 | | series=ROG Strix G15/G16
+ROG Strix G15 G513RM | 2022 | 2022-03 | 15,6″ | AMD Ryzen 6000 H (R7 6800H) | NVIDIA RTX 3060 | DDR5, 2 khe | 15,6″ FHD 300 Hz hoặc WQHD 165 Hz | 2,2 | 90 | | series=ROG Strix G15/G16
+ROG Strix G16 G614JV | 2023 | 2023-02 | 16″ (16:10) | Intel Core thế hệ 13 HX (i7-13650HX) | NVIDIA RTX 4060 | DDR5, 2 khe | 16″ FHD+ 165 Hz | 2,5 | 90 | | series=ROG Strix G15/G16
+ROG Flow X13 GV301QE | 2021 | 2021-02 | 13,4″ cảm ứng, xoay gập | AMD Ryzen 9 5900HS hoặc 5980HS | NVIDIA RTX 3050 Ti | 16 hoặc 32 GB hàn trên bo | 13,4″ FHD+ 120 Hz hoặc 4K | 1,3 | 62 | | series=ROG Flow X13
+## brand=asus line=zenbook group=ASUS Zenbook, Vivobook, ExpertBook
+Zenbook 14 UX425EA | 2020 | 2020-09 | 14″ | Intel Core thế hệ 11 (i5-1135G7, i7-1165G7) | Intel Iris Xe | 8 hoặc 16 GB hàn trên bo | 14″ FHD | 1,17 | 63 | | series=Zenbook 14
+Zenbook 14 UM425QA | 2021 | 2021-03 | 14″ | AMD Ryzen 5000 H (R5 5600H, R7 5800H) | AMD Radeon | 8 hoặc 16 GB hàn trên bo | 14″ FHD | 1,22 | 63 | | series=Zenbook 14
+Zenbook 14 UX3402ZA | 2022 | 2022-03 | 14″ (16:10) | Intel Core thế hệ 12 P (i5-1240P, i7-1260P) | Intel Iris Xe | 8 hoặc 16 GB hàn trên bo | 14″ 2.8K OLED 90 Hz hoặc WQXGA | 1,39 | 75 | | series=Zenbook 14
+Zenbook 14 UX3402VA | 2023 | 2023-03 | 14″ (16:10) | Intel Core thế hệ 13 P (i5-1340P, i7-1360P) | Intel Iris Xe | 16 GB hàn trên bo | 14″ 2.8K OLED | 1,39 | 75 | | series=Zenbook 14
+Zenbook 14 UM3402YA | 2023 | 2023-03 | 14″ (16:10) | AMD Ryzen 7030 U (R5 7530U, R7 7730U) | AMD Radeon | 8 hoặc 16 GB hàn trên bo | 14″ WQXGA hoặc 2.8K OLED | 1,39 | 75 | | series=Zenbook 14
+Zenbook 14 OLED UX3405MA | 2024 | 2024-01 | 14″ (16:10) | Intel Core Ultra thế hệ 1 H (Ultra 5 125H, Ultra 7 155H) | Intel Arc | 16 hoặc 32 GB LPDDR5x hàn trên bo | 14″ FHD+ hoặc 3K OLED 120 Hz | 1,2 | 75 | | series=Zenbook 14
+Zenbook 14 OLED UX3405CA | 2025 | 2025-02 | 14″ (16:10) | Intel Core Ultra thế hệ 2 H (Ultra 5 225H, Ultra 7 255H) | Intel Arc | 16 hoặc 32 GB hàn trên bo | 14″ 3K OLED | 1,2 | 75 | | series=Zenbook 14
+Zenbook S 13 OLED UX5304VA | 2023 | 2023-02 | 13,3″ | Intel Core thế hệ 13 U (i5-1335U, i7-1355U) | Intel Iris Xe | 16 hoặc 32 GB hàn trên bo | 13,3″ 2.8K OLED | 1 | 63 | | series=Zenbook S
+Zenbook S 14 UX5406SA | 2024 | 2024-09 | 14″ (16:10) | Intel Core Ultra thế hệ 2 V (Lunar Lake: Ultra 5 226V, Ultra 7 258V) | Intel Arc 130V/140V | 16 hoặc 32 GB nằm trong chip | 14″ 3K OLED 120 Hz | 1,2 | 72 | | series=Zenbook S
+## brand=asus line=vivobook group=ASUS Zenbook, Vivobook, ExpertBook
+Vivobook S14 S433EA | 2020 | 2020-10 | 14″ | Intel Core thế hệ 11 (i5-1135G7, i7-1165G7) | Intel Iris Xe | 8 hoặc 16 GB hàn trên bo | 14″ FHD | 1,4 | 50 | | series=Vivobook S14
+Vivobook 15 X515EA | 2021 | 2021-01 | 15,6″ | Intel Core thế hệ 11 (i3-1115G4, i5-1135G7) | Intel UHD hoặc Iris Xe | 4 hoặc 8 GB hàn trên bo + 1 khe | 15,6″ FHD | 1,8 | 37 | | series=Vivobook 15
+Vivobook 15 X1502ZA | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 (i3-1215U, i5-1240P) | Intel Iris Xe | 8 GB hàn trên bo + 1 khe | 15,6″ FHD | 1,7 | 42 | | series=Vivobook 15
+Vivobook 14 X1404ZA | 2023 | 2023-03 | 14″ | Intel Core thế hệ 12 U (i3-1215U, i5-1235U) | Intel Iris Xe | 8 GB hàn trên bo + 1 khe | 14″ FHD | 1,4 | 42 | | series=Vivobook 14
+Vivobook 16X K3605VC | 2023 | 2023-09 | 16″ (16:10) | Intel Core thế hệ 13 H (i5-13500H) | NVIDIA RTX 3050 | 16 GB | 16″ WUXGA 120 Hz | 1,8 | 50 | | series=Vivobook 16X
+## brand=asus line=expertbook group=ASUS Zenbook, Vivobook, ExpertBook
+ExpertBook B9 B9400CEA | 2021 | 2021-01 | 14″ | Intel Core thế hệ 11 (i5-1135G7, i7-1165G7) | Intel Iris Xe | 8–32 GB hàn trên bo | 14″ FHD | 0,88 | 33 hoặc 66 | | series=ExpertBook B9

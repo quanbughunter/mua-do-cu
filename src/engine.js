@@ -28,7 +28,7 @@ function buildContext(insp) {
   return {
     cat, model, info, part, codes,
     inputs: insp.inputs || {},
-    brand: model ? model.brand : (info.brand || 'other'),
+    brand: model ? model.brand : (info.brand || info.lbrand || 'other'),
     simExpect: cat && cat.id === 'phone' ? simExpectation(model, part) : null,
     hasLens: !!(info.hasLens || info.lens)
   };

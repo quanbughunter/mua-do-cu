@@ -6,7 +6,7 @@ const TOOL_NAMES = {
   noise: 'Tiếng ồn để thử chống ồn', sensors: 'Cảm biến và rung', camera: 'Xem từng camera', battery: 'Trạng thái sạc',
   drain: 'Tính độ chai pin tai nghe', airpods: 'Đối chiếu số model AirPods', exif: 'Đọc ảnh máy ảnh', dust: 'Tìm bụi cảm biến',
   hotpixel: 'Tìm điểm nóng, điểm chết', coverage: 'Tra bảo hành Apple', partno: 'Tra mã máy: bản nước nào', imei: 'Kiểm tra IMEI',
-  galaxybatt: 'Đọc pin Galaxy từ *#9900#', dellname: 'Tên laptop Dell → cấu hình', battreport: 'Đọc battery report của laptop',
+  galaxybatt: 'Đọc pin Galaxy từ *#9900#', dellname: 'Tên laptop → cấu hình', battreport: 'Đọc battery report của laptop',
   keyboard: 'Thử bàn phím'
 };
 
@@ -633,14 +633,15 @@ TOOLS.coverage = (el, api) => {
 };
 
 
-// ---------- Tên laptop Dell ----------
+// ---------- Tên laptop → cấu hình (mọi hãng) ----------
 TOOLS.dellname = (el, api) => {
-  const m = api.ctx.model;
+  const m = api.ctx.model, b = api.ctx.brand;
   const start = m && m.code ? m.name.replace(/^Dell /, '') : '';
-  el.innerHTML = '<div class="field"><label for="t-dell">Tên hoặc mã máy</label><input class="inp" id="t-dell" autocomplete="off" spellcheck="false" placeholder="Precision 5560" value="' + esc(start) + '"></div>' +
-    '<div id="t-dell-out">' + (start ? dellResultHTML(decodeDell(start), { inInsp: true }) : '') + '</div>' + dellRulesHTML() + (api.item ? levelPicker(api) : '');
+  const ph = { lenovo: 'ThinkPad T14 Gen 3', hp: 'EliteBook 840 G8', apple: 'A2338 hoặc MacBook Air M2', asus: 'FX506HC', acer: 'AN515-57', msi: 'Katana GF66 11UE' }[b] || 'Precision 5560';
+  el.innerHTML = '<div class="field"><label for="t-dell">Tên hoặc mã máy</label><input class="inp" id="t-dell" autocomplete="off" spellcheck="false" placeholder="' + esc(ph) + '" value="' + esc(start) + '"></div>' +
+    '<div id="t-dell-out">' + (start ? dellResultHTML(decodeLaptop(start), { inInsp: true }) : '') + '</div>' + dellRulesHTML(b !== 'other' ? b : '') + (api.item ? levelPicker(api) : '');
   const inp = el.querySelector('#t-dell'), out = el.querySelector('#t-dell-out');
-  listen(inp, 'input', () => { out.innerHTML = inp.value.trim() ? dellResultHTML(decodeDell(inp.value), { inInsp: true }) : ''; });
+  listen(inp, 'input', () => { out.innerHTML = inp.value.trim() ? dellResultHTML(decodeLaptop(inp.value), { inInsp: true }) : ''; });
   if (api.item) bindPicker(el, api);
 };
 
@@ -661,7 +662,8 @@ function parseBatteryReport(html) {
     const mwh = rows.filter(r => /\d[\d.,\s\u00a0\u202f]*\s*(mWh|мВт)/i.test(r[1])).map(r => num(r[1]));
     if (mwh.length >= 2) { design = design || mwh[0]; full = full || mwh[1]; }
   }
-  if (product) product = product.replace(/^Dell Inc\.?\s*/i, '').trim();
+  // Tên máy kèm hãng sản xuất: "Dell Inc. Precision 5560", "LENOVO 20W0S0XX00", "ASUSTeK COMPUTER INC. TUF Gaming FX506HC_FX506HC"
+  if (product) product = product.replace(/^(Dell Inc\.?|LENOVO|Hewlett-Packard|HP|ASUSTeK COMPUTER INC\.?|Acer|Micro-Star International Co\.?,? Ltd\.?|Apple Inc\.?)\s+/i, '').replace(/_[A-Z0-9]+$/, '').replace(/\s+Notebook PC$/i, '').trim();
   const pct = design && full ? Math.round(full / design * 1000) / 10 : null;
   return { design, full, cycles, product, bios, pct };
 }
@@ -678,13 +680,13 @@ TOOLS.battreport = (el, api) => {
     if (!r.pct) { out.innerHTML = '<div class="note tone-warn">Không tìm thấy dung lượng pin trong tệp. Kiểm tra lại đúng tệp battery-report.html, và máy có lắp pin.</div>'; return; }
     const lv = r.pct >= 85 ? 'ok' : r.pct >= 70 ? 'b70' : r.pct >= 50 ? 'b50' : 'low';
     const tone = lv === 'ok' ? 'pass' : lv === 'low' ? 'stop' : 'warn';
-    const dec = r.product ? decodeDell(r.product) : null;
-    const dm = r.product ? (dellByName(r.product) || (dec && dec.kind === 'code' && dec.models[0]) || null) : null;
+    const dec = r.product ? decodeLaptop(r.product) : null;
+    const dm = r.product ? (laptopByName(r.product) || (dec && dec.ok && dec.kind === 'code' && dec.models[0]) || null) : null;
     let h = '<div class="gb-head"><span class="bignum num">' + String(r.pct).replace('.', ',') + '%</span><span class="pill lv t-' + tone + '">' + esc((api.item.levels.find(x => x.id === lv) || {}).label || '') + '</span></div>' +
       '<dl class="kv"><dt>Dung lượng thiết kế</dt><dd class="num">' + r.design.toLocaleString('vi-VN') + ' mWh</dd><dt>Sạc đầy hiện tại</dt><dd class="num">' + r.full.toLocaleString('vi-VN') + ' mWh</dd>' +
       (r.cycles != null ? '<dt>Số lần sạc</dt><dd class="num">' + r.cycles + '</dd>' : '') + (r.product ? '<dt>Máy</dt><dd>' + esc(r.product) + '</dd>' : '') + (r.bios ? '<dt>BIOS</dt><dd>' + esc(r.bios) + '</dd>' : '') + '</dl>';
     if (dm && api.ctx.model && api.ctx.model.id !== dm.id) h += '<div class="note tone-warn">Tệp ghi máy là ' + esc(dm.name) + ', khác máy đang chọn trong phiếu (' + esc(api.ctx.model.name) + ').</div>';
-    h += '<div class="btnrow"><button class="btn primary" id="b-s">Ghi vào phiếu</button>' + (dm && (!api.ctx.model || api.ctx.model.id !== dm.id) ? '<button class="btn" id="b-m">Chọn đời ' + esc(dm.name.replace(/^Dell /, '')) + '</button>' : '') + '</div>';
+    h += '<div class="btnrow"><button class="btn primary" id="b-s">Ghi vào phiếu</button>' + (dm && (!api.ctx.model || api.ctx.model.id !== dm.id) ? '<button class="btn" id="b-m">Chọn đời ' + esc(dm.name.replace(/^(Dell|Lenovo|HP|ASUS|Acer|MSI) /, '')) + '</button>' : '') + '</div>';
     out.innerHTML = h;
     el.querySelectorAll('[data-pick]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.pick === lv)));
     out.querySelector('#b-s').onclick = () => {

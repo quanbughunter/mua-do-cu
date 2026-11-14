@@ -11,9 +11,9 @@ ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / 'src'
 DIST = ROOT / 'dist'
 FONTS = ROOT / 'fontsrc'
-VERSION = '0.4.0'
-JS_FILES = ['data-common.js', 'data-phone.js', 'data-headphones.js', 'data-dell.js', 'data-laptop.js', 'data-camera.js', 'data-money.js',
-            'decode.js', 'dell.js', 'engine.js', 'tools.js', 'ui.js', 'app.js']
+VERSION = '0.5.0'
+JS_FILES = ['data-common.js', 'data-phone.js', 'data-headphones.js', 'data-dell.js', 'data-laptops.js', 'data-laptop.js', 'data-camera.js', 'data-money.js',
+            'decode.js', 'dell.js', 'laptops.js', 'engine.js', 'tools.js', 'ui.js', 'app.js']
 
 RANGES = {
     'latin': 'U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD',

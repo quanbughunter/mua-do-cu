@@ -342,6 +342,10 @@ textarea.inp { resize: vertical; min-height: 92px; }
 .dl-nb .lbl { font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .dl-pick { display: flex; flex-wrap: wrap; gap: 6px; }
 .dl-rules dd .dl-ex { display: block; margin-top: 3px; }
+.lp-rb { border-top: 1px solid var(--line); padding: 8px 0; }
+.lp-rb:last-child { padding-bottom: 0; }
+.lp-rb summary { cursor: pointer; font-weight: 600; font-size: 13.5px; color: var(--accent); }
+.lp-rb[open] summary { margin-bottom: 8px; }
 .dl-mini { display: flex; flex-direction: column; gap: 10px; border-top: 1px dashed var(--line); padding-top: 10px; }
 pre.cmd { background: var(--sunk); border-radius: 8px; padding: 10px 12px; margin: 0; font-size: 14px; overflow-x: auto; }
 

@@ -188,7 +188,7 @@ document.addEventListener('click', e => {
       if (f) {
         f.value = b.dataset.v;
         if (f.id === 'q-dell') { S.ui.quickVal.dell = f.value; document.getElementById('q-out').innerHTML = quickDellOut(f.value); }
-        else document.getElementById('t-dell-out').innerHTML = dellResultHTML(decodeDell(f.value), { inInsp: true });
+        else document.getElementById('t-dell-out').innerHTML = dellResultHTML(decodeLaptop(f.value), { inInsp: true });
         f.scrollIntoView({ block: 'nearest' });
       }
       break;
@@ -263,6 +263,13 @@ document.addEventListener('change', e => {
     insp.model = t.value; touch(insp); render(true); return;
   }
   if (t.dataset.f === 'info.storage' && insp) { insp.info.storage = t.value; touch(insp); render(true); return; }
+  if (t.dataset.f === 'info.lbrand' && insp) {
+    // Đổi hãng laptop: bỏ đời máy đang chọn nếu khác hãng, để danh sách đời máy và ô số sê-ri đi theo hãng mới
+    insp.info.lbrand = t.value;
+    const m = getModel(getCategory('laptop'), insp.model);
+    if (m && m.brand !== t.value) insp.model = '';
+    touch(insp); render(true); return;
+  }
   if (t.dataset.f && insp && (t.dataset.live === 'partno')) { setTimeout(() => render(true), 0); return; }
   if (t.dataset.input && insp) {
     const k = t.dataset.input, it = buildContext(insp).cat.items.find(x => x.id === t.dataset.item);

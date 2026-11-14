@@ -59,6 +59,7 @@ function cameraRepairUSD(m) {
 
 // Laptop: ước lượng giá linh kiện thay ngoài (USD), sửa được trên màn kết quả. Màn 4K/OLED, máy trạm đắt hơn.
 function laptopRepairUSD(m) {
+  if (m && m.brand === 'apple') return macRepairUSD(m);
   const usd = (m && m.usd) || 1000;
   const big = m && /1[67]/.test(m.size || '');
   const hi = m && /OLED|UHD|3840|4K|3K|2880|3456/.test(m.display || '');
@@ -68,6 +69,19 @@ function laptopRepairUSD(m) {
     keyboard: 90, touchpad: 70, hinge: 80, charger: m && /1[38]0|240/.test(m.charger || '') ? 80 : 45,
     ssd: 60, fan: 30, lports: 70, lspeaker: 45, webcam: 40, wifi: 25,
     lcase: R(usd * 0.06) + 40, lboard: R(usd * 0.3), gpu: R(usd * 0.35)
+  };
+}
+
+// MacBook: pin theo bảng giá thay pin của Apple (Air ~159, Pro 13 ~199, Pro 14 ~249, Pro 16 ~279 USD), màn và bàn phím
+// theo giá thay ngoài (màn nguyên cụm, bàn phím phải thay cả mặt C). RAM và ổ hàn chết: hỏng là sửa bo.
+function macRepairUSD(m) {
+  const usd = m.usd || 1299, air = /Air|Neo/.test(m.name || ''), big = /\b1[56]\b/.test(m.name || ''), p14 = /Pro 14/.test(m.name || '');
+  return {
+    lbatt: air ? 159 : big ? 279 : p14 ? 249 : 199,
+    lscreen: air ? (big ? 330 : 260) : big ? 550 : p14 ? 450 : 320,
+    keyboard: air ? 150 : 190, touchpad: 120, hinge: air ? 260 : 400, charger: big || p14 ? 99 : 59,
+    ssd: R(usd * 0.3), fan: air ? 30 : 45, lports: 120, lspeaker: 90, webcam: 120, wifi: R(usd * 0.25),
+    lcase: R(usd * 0.08) + 60, lboard: R(usd * 0.35), gpu: R(usd * 0.35)
   };
 }
 

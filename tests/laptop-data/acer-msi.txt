@@ -1,0 +1,57 @@
+# Acer và MSI. Mã Acer (AN515-57…) và mã MSI (11UC, B13VFK…) in trên tem đáy máy.
+## brand=acer line=nitro group=Acer Nitro
+Nitro 5 AN515-54 | 2019 | 2019-04 | 15,6″ | Intel Core thế hệ 9 H (i5-9300H, i7-9750H) | NVIDIA GTX 1650 hoặc GTX 1660 Ti | DDR4, 2 khe | 15,6″ FHD 60–144 Hz | 2,3 | 57 | | series=Nitro 5 Intel
+Nitro 5 AN515-55 | 2020 | 2020-04 | 15,6″ | Intel Core thế hệ 10 H (i5-10300H, i7-10750H) | NVIDIA GTX 1650, 1650 Ti, 1660 Ti, RTX 2060 hoặc 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 57 | | series=Nitro 5 Intel
+Nitro 5 AN515-57 | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA GTX 1650, RTX 3050, 3050 Ti hoặc 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,2 | 57 | | series=Nitro 5 Intel
+Nitro 5 AN515-58 | 2022 | 2022-04 | 15,6″ | Intel Core thế hệ 12 H (i5-12500H, i7-12650H/12700H) | NVIDIA RTX 3050, 3050 Ti, 3060, 4050 hoặc 4060 | DDR4, 2 khe | 15,6″ FHD 144–165 Hz | 2,5 | 57,5 | | series=Nitro 5 Intel; aliases=Nitro 5 Tiger; note=Hay gọi là Nitro 5 Tiger. Bản 2023 cùng mã có thêm card RTX 40.
+Nitro 5 AN515-44 | 2020 | 2020-04 | 15,6″ | AMD Ryzen 4000 H (R5 4600H, R7 4800H) | NVIDIA GTX 1650 hoặc 1650 Ti | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,3 | 57 | | series=Nitro 5 AMD
+Nitro 5 AN515-45 | 2021 | 2021-04 | 15,6″ | AMD Ryzen 5000 H (R5 5600H, R7 5800H) | NVIDIA RTX 3050, 3060 hoặc 3070 | DDR4, 2 khe | 15,6″ FHD 144 Hz hoặc QHD | 2,2 | 57 | | series=Nitro 5 AMD
+Nitro 5 AN515-46 | 2022 | 2022-04 | 15,6″ | AMD Ryzen 6000 H (R5 6600H, R7 6800H) | NVIDIA RTX 3050 Ti, 3060 hoặc 3070 Ti | DDR5, 2 khe | 15,6″ FHD 144 Hz hoặc QHD 165 Hz | 2,5 | 57,5 | | series=Nitro 5 AMD; aliases=Nitro 5 Tiger AMD
+Nitro 5 AN515-47 | 2023 | 2023-03 | 15,6″ | AMD Ryzen 7035 (R5 7535HS, R7 7735HS) | NVIDIA RTX 3050, 4050 hoặc 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,5 | 57,5 | | series=Nitro 5 AMD
+Nitro V 15 ANV15-51 | 2023 | 2023-05 | 15,6″ | Intel Core thế hệ 13 H (i5-13420H, i7-13620H) | NVIDIA RTX 2050, 3050, 4050 hoặc 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,1 | 57 | | series=Nitro V 15
+Nitro V 15 ANV15-41 | 2023 | 2023-09 | 15,6″ | AMD Ryzen 7035 (R5 7535HS, R7 7735HS) | NVIDIA RTX 2050, 3050 hoặc 4050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,1 | 57 | | series=Nitro V 15
+## brand=acer line=predator group=Acer Predator
+Predator Helios 300 PH315-53 | 2020 | 2020-04 | 15,6″ | Intel Core thế hệ 10 H (i7-10750H) | NVIDIA GTX 1660 Ti, RTX 2060 hoặc 2070 | DDR4, 2 khe | 15,6″ FHD 144–240 Hz | 2,3 | 59 | | series=Predator Helios
+Predator Helios 300 PH315-54 | 2021 | 2021-04 | 15,6″ | Intel Core thế hệ 11 H (i7-11800H) | NVIDIA RTX 3060, 3070 hoặc 3080 | DDR4, 2 khe | 15,6″ FHD 144 Hz hoặc QHD 165 Hz | 2,3 | 59 | | series=Predator Helios
+Predator Helios 300 PH315-55 | 2022 | 2022-04 | 15,6″ | Intel Core thế hệ 12 H (i7-12700H) | NVIDIA RTX 3060 hoặc 3070 Ti | DDR5, 2 khe | 15,6″ FHD 165 Hz hoặc QHD | 2,6 | 90 | | series=Predator Helios
+Predator Helios Neo 16 PHN16-71 | 2023 | 2023-03 | 16″ (16:10) | Intel Core thế hệ 13 HX (i5-13500HX, i7-13700HX) | NVIDIA RTX 4050, 4060 hoặc 4070 | DDR5, 2 khe | 16″ WUXGA 165 Hz hoặc WQXGA | 2,6 | 90 | | series=Predator Helios
+## brand=acer line=aspire group=Acer Aspire, Swift
+Aspire 5 A515-54 | 2019 | 2019-06 | 15,6″ | Intel Core thế hệ 8–10 U (i5-8265U, i5-10210U) | Intel UHD hoặc NVIDIA MX250 | 4 hoặc 8 GB hàn trên bo + 1 khe | 15,6″ FHD | 1,8 | 48 | | series=Aspire 5 Intel
+Aspire 5 A515-55 | 2020 | 2020-03 | 15,6″ | Intel Core thế hệ 10 (Ice Lake, i5-1035G1) | Intel UHD hoặc NVIDIA MX350 | Hàn trên bo + 1 khe | 15,6″ FHD | 1,8 | 48 | | series=Aspire 5 Intel
+Aspire 5 A515-56 | 2021 | 2021-01 | 15,6″ | Intel Core thế hệ 11 (i3-1115G4, i5-1135G7, i7-1165G7) | Intel Iris Xe, MX350 hoặc MX450 | Hàn trên bo + 1 khe | 15,6″ FHD | 1,65 | 48 | | series=Aspire 5 Intel
+Aspire 5 A515-57 | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 (i5-1235U, i7-1255U) | Intel Iris Xe hoặc NVIDIA MX550 | Hàn trên bo + 1 khe | 15,6″ FHD | 1,78 | 50 | | series=Aspire 5 Intel
+Aspire 5 A515-58 | 2023 | 2023-03 | 15,6″ | Intel Core thế hệ 13 (i5-1335U, i5-13420H, i7-1355U) | Intel Iris Xe hoặc UHD | 8 hoặc 16 GB | 15,6″ FHD | 1,76 | 50 | | series=Aspire 5 Intel
+Aspire 5 A515-45 | 2021 | 2021-03 | 15,6″ | AMD Ryzen 5000 U (R5 5500U, R7 5700U) | AMD Radeon | Hàn trên bo + 1 khe | 15,6″ FHD | 1,76 | 48 | | series=Aspire 5 AMD
+Aspire 7 A715-42G | 2021 | 2021-04 | 15,6″ | AMD Ryzen 5000 U (R5 5500U, R7 5700U) | NVIDIA GTX 1650 | DDR4, 2 khe | 15,6″ FHD | 2,15 | 48 | | series=Aspire 7
+Aspire 7 A715-76G | 2022 | 2022-06 | 15,6″ | Intel Core i5-12450H (thế hệ 12 H) | NVIDIA RTX 2050 hoặc 3050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,1 | 50 | | series=Aspire 7
+## brand=acer line=swift group=Acer Aspire, Swift
+Swift 3 SF314-59 | 2020 | 2020-10 | 14″ | Intel Core thế hệ 11 (i5-1135G7, i7-1165G7) | Intel Iris Xe | 8 hoặc 16 GB hàn trên bo | 14″ FHD | 1,2 | 48 | | series=Swift 3/Swift Go 14
+Swift 3 SF314-511 | 2021 | 2021-04 | 14″ | Intel Core thế hệ 11 (i5-1135G7, i7-1165G7) | Intel Iris Xe | 8 hoặc 16 GB hàn trên bo | 14″ FHD | 1,2 | 56 | | series=Swift 3/Swift Go 14
+Swift 3 SF314-43 | 2021 | 2021-03 | 14″ | AMD Ryzen 5000 U (R5 5500U, R7 5700U) | AMD Radeon | 8 hoặc 16 GB hàn trên bo | 14″ FHD | 1,2 | 56 | | series=Swift 3 AMD
+Swift Go 14 SFG14-71 | 2023 | 2023-03 | 14″ (16:10) | Intel Core thế hệ 13 (i5-1335U, i5-13500H, i7-13700H) | Intel Iris Xe | 16 GB LPDDR5 hàn trên bo | 14″ 2.8K OLED 90 Hz | 1,3 | 65 | | series=Swift 3/Swift Go 14
+## brand=msi line=msigaming group=MSI Gaming
+GF63 Thin 9SC | 2019 | 2019-05 | 15,6″ | Intel Core thế hệ 9 H (i5-9300H, i7-9750H) | NVIDIA GTX 1650 Max-Q | DDR4, 2 khe | 15,6″ FHD | 1,86 | 51 | | series=GF63 Thin
+GF63 Thin 10SC | 2020 | 2020-04 | 15,6″ | Intel Core thế hệ 10 H (i5-10300H, i7-10750H) | NVIDIA GTX 1650 Max-Q | DDR4, 2 khe | 15,6″ FHD | 1,86 | 51 | | series=GF63 Thin
+GF63 Thin 11SC | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA GTX 1650 Max-Q | DDR4, 2 khe | 15,6″ FHD | 1,86 | 51 | | series=GF63 Thin
+GF63 Thin 11UC | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA RTX 3050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 1,86 | 51 | | series=GF63 Thin
+GF63 Thin 12UC | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 H (i5-12450H, i7-12650H) | NVIDIA RTX 3050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 1,86 | 52 | | series=GF63 Thin
+GF63 Thin 12VE | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 12 H (i5-12450H, i7-12650H) | NVIDIA RTX 4050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 1,86 | 52 | | series=GF63 Thin
+Katana GF66 11UC | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA RTX 3050 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Katana 15
+Katana GF66 11UE | 2021 | 2021-05 | 15,6″ | Intel Core thế hệ 11 H (i7-11800H) | NVIDIA RTX 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Katana 15
+Katana GF66 12UD | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 H (i7-12700H) | NVIDIA RTX 3050 Ti | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Katana 15
+Katana 15 B12VEK | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 12 H (i5-12450H, i7-12650H) | NVIDIA RTX 4050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Katana 15
+Katana 15 B13VFK | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 13 H (i7-13620H) | NVIDIA RTX 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Katana 15
+Sword 15 A11UD | 2021 | 2021-06 | 15,6″ | Intel Core thế hệ 11 H (i5-11400H, i7-11800H) | NVIDIA RTX 3050 Ti | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Sword 15
+Sword 15 A12UE | 2022 | 2022-03 | 15,6″ | Intel Core thế hệ 12 H (i7-12650H) | NVIDIA RTX 3060 | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,25 | 53,5 | | series=Sword 15
+Cyborg 15 A12VE | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 12 H (i5-12450H, i7-12650H) | NVIDIA RTX 4050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 1,98 | 53,5 | | series=Cyborg 15
+Cyborg 15 A12VF | 2023 | 2023-02 | 15,6″ | Intel Core thế hệ 12 H (i7-12650H) | NVIDIA RTX 4060 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 1,98 | 53,5 | | series=Cyborg 15
+Cyborg 15 A13UC | 2024 | 2024-03 | 15,6″ | Intel Core thế hệ 13 H | NVIDIA RTX 3050 | DDR5, 2 khe | 15,6″ FHD 144 Hz | 1,98 | 53,5 | | series=Cyborg 15
+Bravo 15 B5DD | 2021 | 2021-04 | 15,6″ | AMD Ryzen 5000 H (R5 5600H, R7 5800H) | AMD Radeon RX 5500M | DDR4, 2 khe | 15,6″ FHD 144 Hz | 2,35 | 52 | | series=Bravo 15
+Bravo 15 B7ED | 2023 | 2023-02 | 15,6″ | AMD Ryzen 7035 (R5 7535HS, R7 7735HS) | AMD Radeon RX 6550M | DDR5, 2 khe | 15,6″ FHD 144 Hz | 2,1 | 53,5 | | series=Bravo 15
+Stealth 15M A11SDK | 2021 | 2021-03 | 15,6″ | Intel Core i7-11375H (thế hệ 11 H35) | NVIDIA GTX 1660 Ti Max-Q | DDR4, 2 khe | 15,6″ FHD 144 Hz | 1,7 | 52 | | series=Stealth 15M
+GE66 Raider 10SF | 2020 | 2020-04 | 15,6″ | Intel Core thế hệ 10 H (i7-10750H, i7-10875H) | NVIDIA RTX 2070 hoặc 2070 Super | DDR4, 2 khe | 15,6″ FHD 240–300 Hz | 2,38 | 99,9 | | series=Raider GE66
+## brand=msi line=msioffice group=MSI Modern, Prestige
+Modern 14 B11MOU | 2021 | 2021-03 | 14″ | Intel Core thế hệ 11 (i3-1115G4, i5-1155G7, i7-1195G7) | Intel Iris Xe | 8 GB + 1 khe | 14″ FHD | 1,3 | 39 | | series=Modern 14
+Modern 14 C12M | 2022 | 2022-06 | 14″ | Intel Core thế hệ 12 U (i5-1235U, i7-1255U) | Intel Iris Xe | 8–16 GB, 1 khe | 14″ FHD | 1,4 | 39,3 | | series=Modern 14
+Modern 14 F13MG | 2024 | 2024-03 | 14″ (16:10) | Intel Core thế hệ 13 U (i5-1335U, i7-1355U) | Intel Iris Xe | 8–16 GB | 14″ FHD+ | 1,4 | 39,3 | | series=Modern 14
+Prestige 14 A11SC | 2021 | 2021-01 | 14″ | Intel Core thế hệ 11 (i5-1135G7, i7-1185G7) | NVIDIA GTX 1650 Max-Q | 16 GB hàn trên bo | 14″ FHD hoặc 4K | 1,29 | 52 | | series=Prestige 14
